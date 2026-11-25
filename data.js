@@ -1,46 +1,47 @@
 /**
- * MI6 DECLASSIFIED ARCHIVE // DANIEL CRAIG 007 ERA (2006-2021)
- * Independent Tribute & Lookbook Data Layer
- * 
+ * 007 // CRAIG ERA (2006-2021)
+ * Curated Digital Exhibition Data Layer
+ *
  * Strict architectural isolation: Zero framework dependencies.
- * Provides complete structured metadata and full bilingual copy.
+ * Full bilingual synchronization (zh / en).
  */
 
 const SITE_DATA = {
   // ==========================================
-  // CHINESE (SIMPLIFIED) // 中文文案
+  // CHINESE (SIMPLIFIED) // 中文策展文案
   // ==========================================
   zh: {
     meta: {
-      title: "MI6 解密档案 // 丹尼尔·克雷格 007 时代画册 (2006–2021)",
-      description: "致敬丹尼尔·克雷格版 007（2006–2021）的沉浸式叙事网页：MI6 解密档案 × 独立电影画册。"
+      title: "007 // 丹尼尔·克雷格时代影展 (2006–2021)",
+      description: "致敬丹尼尔·克雷格版 007（2006–2021）的影院级互动视觉策展与解密档案。"
     },
 
     nav: {
       brandCode: "007 // CRAIG ERA",
-      brandSub: "MI6 ARCHIVAL DOSSIER",
+      soundOff: "声效 关",
+      soundOn: "声效 开",
+      soundToggleAria: "切换滚动联动背景声效",
       langToggleZh: "中文",
       langToggleEn: "EN"
     },
 
     hero: {
-      archiveHeader: "MI6 ARCHIVE // DOSSIER 2006–2021",
-      classification: "TOP SECRET // CLASSIFIED INTEL // VAUXHALL CROSS",
       mainTitle: "DANIEL CRAIG",
       titleTranslation: "丹尼尔·克雷格",
       subtitle: "THE 007 ERA // 时代启示录",
-      leadParagraph: "十五载风霜，五部史诗。褪去黄金时代的轻佻与浮华，一个带着血痕、肉身会碎裂、深陷宿命与创伤的现代特工神话。",
+      leadParagraph: "十五载风霜，五部史诗。褪去黄金时代的轻佻与浮华，一个带着血痕、肉身会碎裂的现代特工神话。",
       scrollPrompt: "SCROLL TO ENTER",
-      scrollHint: "向下滑动以启封机密档案"
+      scrollHint: "向下滑动以启幕"
     },
 
-    oneShot: {
-      badge: "PHASE 2 ARCHITECTURE",
-      stageTag: "[ PHASE 2 STAGE // 5-FILM ONE-SHOT SILHOUETTE SEQUENCE ]",
-      stageTitle: "五部曲剪影长镜头 · 核心舞台预留",
-      timelineLabel: "2006 — 2008 — 2012 — 2015 — 2021",
-      description: "架构占位容器：第 2 阶段将在此挂载 GSAP ScrollTrigger 驱动的剪影一镜到底长镜头（Casino Royale 至 No Time to Die 的时空流转与形态演进）。",
-      filmsHint: "CASINO ROYALE · QUANTUM OF SOLACE · SKYFALL · SPECTRE · NO TIME TO DIE"
+    stage: {
+      dossierToggleAria: "展开或收起当前章节档案参数",
+      dossierCloseAria: "关闭章节档案",
+      dossierLabels: {
+        director: "导演",
+        location: "摄影与取景",
+        gear: "标志器物"
+      }
     },
 
     artifactsSection: {
@@ -54,25 +55,27 @@ const SITE_DATA = {
       sectionIndex: "02",
       sectionCategory: "THE SONIC LEGACY",
       title: "原声编年史",
-      subtitle: "五部独立交响乐章，记录克雷格版邦德的情感碎裂、挣扎与宿命升华。",
+      subtitle: "五部独立交响乐章，记录克雷格版邦德的情感碎裂与宿命升华。",
       headers: {
         year: "年份",
         track: "曲目 / 音乐人",
         film: "所属电影",
-        tag: "声响注记",
-        critique: "乐评摘要"
-      }
+        critique: "策展短评"
+      },
+      playAria: "试听曲目",
+      pauseAria: "暂停曲目"
     },
 
-    footer: {
-      agentDossier: "AGENT: JAMES BOND // DESIGNATION: 007 // ERA: 2006–2021 // STATUS: RETIRED",
-      jurisdiction: "HER MAJESTY'S SECRET INTELLIGENCE SERVICE // SECTION ARCHIVE // LONDON SE1",
-      disclaimer: "本网站为非盈利独立艺术画册，致敬丹尼尔·克雷格 15 年间对詹姆斯·邦德传奇的重塑与贡献。无商业用途。",
-      backToTop: "BACK TO TOP / 返回顶部"
+    curtainCall: {
+      quote: "“We have all the time in the world.”",
+      quoteTranslation: "我们拥有世间所有的时间",
+      eraMark: "2006 — 2021 · FIN",
+      backToTopAria: "返回页面顶部",
+      credit: "CURATED BY HN STUDIO"
     },
 
     // ------------------------------------------
-    // 五部曲完整元数据 (预埋 localBackdrop, 坐标, 配色, 弧光评述)
+    // 五部曲完整元数据 (localBackdrop, audioSrc, 5%环境底光, L2/L3精简文案, 彩蛋档案)
     // ------------------------------------------
     films: [
       {
@@ -80,150 +83,110 @@ const SITE_DATA = {
         order: "01",
         year: 2006,
         localBackdrop: "assets/act-1.webp",
+        audioSrc: "assets/theme-1.mp3",
+        ambientColor: "#0c1d1a",
         theme: "ORIGIN",
-        themeZh: "破茧 · 执刃者",
-        title: "Casino Royale",
+        themeZh: "破茧",
+        title: "CASINO ROYALE",
         titleZh: "大战皇家赌场",
         director: "Martin Campbell",
-        runtime: "144 MIN",
-        coordinates: {
-          location: "Montenegro & Venice",
-          geo: "45.4404° N, 12.3160° E"
-        },
+        location: "巴哈马 · 黑山 · 威尼斯 / Phil Méheux",
+        signatureProp: "Aston Martin DBS · Omega Seamaster 300M",
         palette: {
-          primary: "#0A0F16",
-          accent: "#8FA8BE",
-          overlay: "rgba(143, 168, 190, 0.08)"
-        },
-        themeSong: {
-          title: "You Know My Name",
-          artist: "Chris Cornell"
+          primary: "#0c1d1a",
+          accent: "#8FA8BE"
         },
         quote: "The name's Bond. James Bond.",
         quoteZh: "“我叫邦德。詹姆斯·邦德。”",
-        quoteContext: "Lake Como, Final Scene",
-        quoteContextZh: "意大利科莫湖畔 · 终局时刻",
-        arcCommentary: "褪去花哨装备与绅士伪装，一把带血的钝刀在肉搏与背叛中淬火。维斯珀·琳德的决绝赋予了他双零特工的代号，也终身剥夺了他再次托付真心的可能。"
+        arcCommentary: "剥离浮华，在背叛与血火中淬炼出冷峻现代特工的诞生。"
       },
       {
         id: "quantum-of-solace",
         order: "02",
         year: 2008,
         localBackdrop: "assets/act-2.webp",
+        audioSrc: "assets/theme-2.mp3",
+        ambientColor: "#1e1610",
         theme: "VENDETTA",
-        themeZh: "复仇 · 焦土",
-        title: "Quantum of Solace",
+        themeZh: "焦土",
+        title: "QUANTUM OF SOLACE",
         titleZh: "大破量子危机",
         director: "Marc Forster",
-        runtime: "106 MIN",
-        coordinates: {
-          location: "Atacama Desert, Bolivia",
-          geo: "24.6272° S, 69.3179° W"
-        },
+        location: "阿塔卡马沙漠 · 锡耶纳 · 布雷根茨",
+        signatureProp: "Tom Ford 定制西装 · Omega Planet Ocean",
         palette: {
-          primary: "#16110C",
-          accent: "#B88B58",
-          overlay: "rgba(184, 139, 88, 0.08)"
-        },
-        themeSong: {
-          title: "Another Way to Die",
-          artist: "Jack White & Alicia Keys"
+          primary: "#1e1610",
+          accent: "#B88B58"
         },
         quote: "I don't think the dead care about vengeance.",
         quoteZh: "“我不认为死去的人还在乎复仇。”",
-        quoteContext: "Perla de las Dunas Hotel",
-        quoteContextZh: "阿塔卡马沙漠酒店 · 火海对峙",
-        arcCommentary: "一场被痛楚与窒息感驱动的极速追猎。在干涸残酷的阿塔卡马沙漠中，他领悟到复仇无法抚平失落，而克制与职责是特工灵魂仅剩的锚点。"
+        arcCommentary: "穿越干涸焦土，在失控的复仇追猎中寻回特工的克制锚点。"
       },
       {
         id: "skyfall",
         order: "03",
         year: 2012,
         localBackdrop: "assets/act-3.webp",
+        audioSrc: "assets/theme-3.mp3",
+        ambientColor: "#101922",
         theme: "LEGACY",
-        themeZh: "遗泽 · 天幕",
-        title: "Skyfall",
+        themeZh: "天幕",
+        title: "SKYFALL",
         titleZh: "大破天幕杀机",
         director: "Sam Mendes",
-        runtime: "143 MIN",
-        coordinates: {
-          location: "Glencoe, Scottish Highlands",
-          geo: "56.6639° N, 5.0567° W"
-        },
+        location: "伦敦 · 上海 · 苏格兰高地 / Roger Deakins",
+        signatureProp: "Walther PPK 掌纹手枪 · Aston Martin DB5",
         palette: {
-          primary: "#101214",
-          accent: "#9BA3AB",
-          overlay: "rgba(155, 163, 171, 0.08)"
-        },
-        themeSong: {
-          title: "Skyfall",
-          artist: "Adele"
+          primary: "#101922",
+          accent: "#9BA3AB"
         },
         quote: "Sometimes the old ways are the best.",
         quoteZh: "“有时，旧的方法才是最好的。”",
-        quoteContext: "Skyfall Lodge, Glencoe",
-        quoteContextZh: "苏格兰天幕庄园 · 祖宅诀别",
-        arcCommentary: "从死线重返废墟，一身伤痕的旧时代遗留物在苏格兰高地的迷雾荒原中直面童年创伤与母性图腾的终结。天幕破裂，神话重铸。"
+        arcCommentary: "于高地迷雾重返废墟，在母性图腾崩塌后重铸不朽神话。"
       },
       {
         id: "spectre",
         order: "04",
         year: 2015,
         localBackdrop: "assets/act-4.webp",
+        audioSrc: "assets/theme-4.mp3",
+        ambientColor: "#1e140e",
         theme: "SHADOW",
-        themeZh: "暗影 · 罗网",
-        title: "Spectre",
+        themeZh: "暗影",
+        title: "SPECTRE",
         titleZh: "幽灵党",
         director: "Sam Mendes",
-        runtime: "148 MIN",
-        coordinates: {
-          location: "Mexico City & Austrian Alps",
-          geo: "19.4326° N, 99.1332° W"
-        },
+        location: "墨西哥城 · 罗马 · 奥地利雪山",
+        signatureProp: "Omega Seamaster 300 · Tom Ford O’Connor",
         palette: {
-          primary: "#0D0C09",
-          accent: "#B59B6A",
-          overlay: "rgba(181, 155, 106, 0.08)"
-        },
-        themeSong: {
-          title: "Writing's on the Wall",
-          artist: "Sam Smith"
+          primary: "#1e140e",
+          accent: "#B59B6A"
         },
         quote: "A gun gives you an illusion of personal power... you have a choice.",
-        quoteZh: "“枪支给人带来拥有掌控力的幻觉……但你有权选择不扣动扳机。”",
-        quoteContext: "Westminster Bridge, London",
-        quoteContextZh: "伦敦威斯敏斯特桥 · 终局抉择",
-        arcCommentary: "深渊般的暗黑罗网将过往所有伤口系于同一阴谋之首。站在伦敦破晓的桥头，他第一次放下了枪口，在无尽的杀戮循环中选择了生者的尊严与远去。"
+        quoteZh: "“枪支给人带来掌控的幻觉……但你有权选择不扣动扳机。”",
+        arcCommentary: "直面暗黑罗网的宿命源头，首次在破晓桥头放下枪口抉择。"
       },
       {
         id: "no-time-to-die",
         order: "05",
         year: 2021,
         localBackdrop: "assets/act-5.webp",
+        audioSrc: "assets/theme-5.mp3",
+        ambientColor: "#16181c",
         theme: "SACRIFICE",
-        themeZh: "向死 · 永恒",
-        title: "No Time to Die",
+        themeZh: "永恒",
+        title: "NO TIME TO DIE",
         titleZh: "无暇赴死",
         director: "Cary Joji Fukunaga",
-        runtime: "163 MIN",
-        coordinates: {
-          location: "Matera, Italy & Faroe Islands",
-          geo: "40.6664° N, 16.6043° E"
-        },
+        location: "马泰拉 · 挪威 · 法罗群岛 / Linus Sandgren",
+        signatureProp: "Omega 钛金属海马 · N.Peal 战术针织衫",
         palette: {
-          primary: "#091012",
-          accent: "#7D9B8F",
-          overlay: "rgba(125, 155, 143, 0.08)"
-        },
-        themeSong: {
-          title: "No Time to Die",
-          artist: "Billie Eilish"
+          primary: "#16181c",
+          accent: "#7D9B8F"
         },
         quote: "The proper function of man is to live, not to exist.",
         quoteZh: "“人的真正使命在于热烈地生活，而非苟且残存。”",
-        quoteContext: "Safin's Island Facility",
-        quoteContextZh: "绝密导弹基地发射塔 · 永恒回响",
-        arcCommentary: "传奇特工史诗的肃穆落幕。他不再仅仅为王权与疆域而战，而是为了所爱之人不被污染的未来，在烈火与晨曦中从容拥抱属于战士的永恒安宁。"
+        arcCommentary: "卸下王权枷锁，在晨曦烈火中为所爱之人献出永恒安宁。"
       }
     ],
 
@@ -266,7 +229,7 @@ const SITE_DATA = {
     ],
 
     // ------------------------------------------
-    // 原声遗产 (五部曲编年)
+    // 原声编年史 (极简短评 + 音频路径)
     // ------------------------------------------
     soundtracks: [
       {
@@ -276,8 +239,7 @@ const SITE_DATA = {
         film: "Casino Royale",
         filmZh: "大战皇家赌场",
         audioSrc: "assets/theme-1.mp3",
-        tag: "RAW RESURRECTION // 血性重生",
-        critique: "粗砺狂暴的硬摇滚重击，彻底粉碎了过去的从容老派，宣告一个肉身会流血、骨骼会碎裂的全新 007 破茧而生。"
+        critique: "粗砺狂暴的硬摇滚重击，宣告一个肉身会流血的现代 007 破茧而生。"
       },
       {
         year: 2008,
@@ -286,8 +248,7 @@ const SITE_DATA = {
         film: "Quantum of Solace",
         filmZh: "大破量子危机",
         audioSrc: "assets/theme-2.mp3",
-        tag: "FRACTURED SOUL // 裂帛之声",
-        critique: "失真躁动的吉他轮击与尖锐管乐的厮杀，宛如特工在未熄的复仇熔炉中分崩离析的精神残像。"
+        critique: "失真吉他与尖锐管乐厮杀，映照在复仇熔炉中分崩离析的灵魂。"
       },
       {
         year: 2012,
@@ -296,8 +257,7 @@ const SITE_DATA = {
         film: "Skyfall",
         filmZh: "大破天幕杀机",
         audioSrc: "assets/theme-3.mp3",
-        tag: "SYMPHONIC ELEGY // 帝国挽歌",
-        critique: "如天鹅绒般深沉的铜管与悲怆弦乐，与哀婉高贵的声线交织成一曲献给大英帝国旧时代残晖的壮丽挽歌。"
+        critique: "深沉铜管与悲怆弦乐交织，献给旧时代残晖的壮丽帝国挽歌。"
       },
       {
         year: 2015,
@@ -306,56 +266,55 @@ const SITE_DATA = {
         film: "Spectre",
         filmZh: "幽灵党",
         audioSrc: "assets/theme-4.mp3",
-        tag: "SHADOW FALSETTO // 幽灵假音",
-        critique: "脆弱而戏剧化的高音盘旋在宏大管弦乐之上，剥开坚硬的外壳，展露被命运提线木偶师步步紧逼时的孤寂战栗。"
+        critique: "脆弱假音盘旋于宏大管弦之上，展露强硬外壳下的孤寂战栗。"
       },
       {
         year: 2021,
         track: "No Time to Die",
-        artist: "Billie Eilish & Finneas (Orch. Hans Zimmer)",
+        artist: "Billie Eilish & Finneas",
         film: "No Time to Die",
         filmZh: "无暇赴死",
         audioSrc: "assets/theme-5.mp3",
-        tag: "MORTAL REQUIEM // 永恒安魂",
-        critique: "近乎私语的沉寂逐渐汇入汉斯·季默如惊涛骇浪般的交响浪潮中，为这位奉献出所有的英雄献上最后的告别安魂曲。"
+        critique: "低语沉寂汇入汉斯·季默的悲壮交响，奏响战士的终极安魂曲。"
       }
     ]
   },
 
   // ==========================================
-  // ENGLISH // 英文文案
+  // ENGLISH // 英文策展文案
   // ==========================================
   en: {
     meta: {
-      title: "MI6 Declassified Dossier // Daniel Craig 007 Era (2006–2021)",
-      description: "An immersive narrative tribute to Daniel Craig's 007 era (2006–2021): MI6 Declassified Dossier × Indie Film Lookbook."
+      title: "007 // Daniel Craig Era Exhibition (2006–2021)",
+      description: "A cinematic digital exhibition and curated archive dedicated to Daniel Craig's James Bond era (2006–2021)."
     },
 
     nav: {
       brandCode: "007 // CRAIG ERA",
-      brandSub: "MI6 ARCHIVAL DOSSIER",
+      soundOff: "SOUND OFF",
+      soundOn: "SOUND ON",
+      soundToggleAria: "Toggle scroll-synced ambient soundtrack",
       langToggleZh: "中文",
       langToggleEn: "EN"
     },
 
     hero: {
-      archiveHeader: "MI6 ARCHIVE // DOSSIER 2006–2021",
-      classification: "TOP SECRET // CLASSIFIED INTEL // VAUXHALL CROSS",
       mainTitle: "DANIEL CRAIG",
       titleTranslation: "THE 007 ERA",
       subtitle: "A FIFTEEN-YEAR CHRONICLE OF FLESH, SHADOW & RESILIENCE",
-      leadParagraph: "Fifteen years. Five cinematic masterworks. Stripped of mid-century flippancy, a modern operative forged through bruised bone, enduring grief, and unyielding dignity.",
+      leadParagraph: "Fifteen years. Five cinematic chapters. Stripped of mid-century flippancy, a modern operative forged through endurance and dignity.",
       scrollPrompt: "SCROLL TO ENTER",
-      scrollHint: "Scroll down to declassify the dossier"
+      scrollHint: "Scroll down to enter the exhibition"
     },
 
-    oneShot: {
-      badge: "PHASE 2 ARCHITECTURE",
-      stageTag: "[ PHASE 2 STAGE // 5-FILM ONE-SHOT SILHOUETTE SEQUENCE ]",
-      stageTitle: "Five-Film Silhouette Long Take · Core Stage",
-      timelineLabel: "2006 — 2008 — 2012 — 2015 — 2021",
-      description: "Architecture placeholder: Phase 2 will mount a continuous GSAP ScrollTrigger silhouette journey across Craig's fifteen-year evolution from raw recruit to mythic transcendence.",
-      filmsHint: "CASINO ROYALE · QUANTUM OF SOLACE · SKYFALL · SPECTRE · NO TIME TO DIE"
+    stage: {
+      dossierToggleAria: "Toggle current chapter archival notes",
+      dossierCloseAria: "Close archival notes",
+      dossierLabels: {
+        director: "DIRECTOR",
+        location: "UNIT & LENS",
+        gear: "SIGNATURE"
+      }
     },
 
     artifactsSection: {
@@ -374,20 +333,22 @@ const SITE_DATA = {
         year: "YEAR",
         track: "TRACK / ARTIST",
         film: "FILM",
-        tag: "SONIC PROFILE",
-        critique: "CRITIQUE NOTE"
-      }
+        critique: "CURATORIAL NOTE"
+      },
+      playAria: "Preview track",
+      pauseAria: "Pause track"
     },
 
-    footer: {
-      agentDossier: "AGENT: JAMES BOND // DESIGNATION: 007 // ERA: 2006–2021 // STATUS: RETIRED",
-      jurisdiction: "HER MAJESTY'S SECRET INTELLIGENCE SERVICE // SECTION ARCHIVE // LONDON SE1",
-      disclaimer: "Non-commercial independent visual tribute commemorating Daniel Craig's transformative 15-year portrayal of James Bond.",
-      backToTop: "BACK TO TOP"
+    curtainCall: {
+      quote: "“We have all the time in the world.”",
+      quoteTranslation: "",
+      eraMark: "2006 — 2021 · FIN",
+      backToTopAria: "Return to top",
+      credit: "CURATED BY HN STUDIO"
     },
 
     // ------------------------------------------
-    // 5 Films Full Metadata (localBackdrop, coords, palette, arc)
+    // 5 Films Full Metadata
     // ------------------------------------------
     films: [
       {
@@ -395,150 +356,110 @@ const SITE_DATA = {
         order: "01",
         year: 2006,
         localBackdrop: "assets/act-1.webp",
+        audioSrc: "assets/theme-1.mp3",
+        ambientColor: "#0c1d1a",
         theme: "ORIGIN",
         themeZh: "ORIGIN",
-        title: "Casino Royale",
-        titleZh: "Casino Royale",
+        title: "CASINO ROYALE",
+        titleZh: "CASINO ROYALE",
         director: "Martin Campbell",
-        runtime: "144 MIN",
-        coordinates: {
-          location: "Montenegro & Venice",
-          geo: "45.4404° N, 12.3160° E"
-        },
+        location: "Bahamas · Montenegro · Venice / Phil Méheux",
+        signatureProp: "Aston Martin DBS · Omega Seamaster 300M",
         palette: {
-          primary: "#0A0F16",
-          accent: "#8FA8BE",
-          overlay: "rgba(143, 168, 190, 0.08)"
-        },
-        themeSong: {
-          title: "You Know My Name",
-          artist: "Chris Cornell"
+          primary: "#0c1d1a",
+          accent: "#8FA8BE"
         },
         quote: "The name's Bond. James Bond.",
         quoteZh: "The name's Bond. James Bond.",
-        quoteContext: "Lake Como, Final Scene",
-        quoteContextZh: "Lake Como, Final Scene",
-        arcCommentary: "Stripped of gadgetry and polished conceit, a raw, blunt instrument earns his double-O license through bruised knuckles, heartbreak, and cynicism born of Vesper Lynd's betrayal."
+        arcCommentary: "Stripped of conceit, a raw operative is forged through betrayal and blood."
       },
       {
         id: "quantum-of-solace",
         order: "02",
         year: 2008,
         localBackdrop: "assets/act-2.webp",
+        audioSrc: "assets/theme-2.mp3",
+        ambientColor: "#1e1610",
         theme: "VENDETTA",
         themeZh: "VENDETTA",
-        title: "Quantum of Solace",
-        titleZh: "Quantum of Solace",
+        title: "QUANTUM OF SOLACE",
+        titleZh: "QUANTUM OF SOLACE",
         director: "Marc Forster",
-        runtime: "106 MIN",
-        coordinates: {
-          location: "Atacama Desert, Bolivia",
-          geo: "24.6272° S, 69.3179° W"
-        },
+        location: "Atacama Desert · Siena · Bregenz",
+        signatureProp: "Tom Ford Suiting · Omega Planet Ocean",
         palette: {
-          primary: "#16110C",
-          accent: "#B88B58",
-          overlay: "rgba(184, 139, 88, 0.08)"
-        },
-        themeSong: {
-          title: "Another Way to Die",
-          artist: "Jack White & Alicia Keys"
+          primary: "#1e1610",
+          accent: "#B88B58"
         },
         quote: "I don't think the dead care about vengeance.",
         quoteZh: "I don't think the dead care about vengeance.",
-        quoteContext: "Perla de las Dunas Hotel",
-        quoteContextZh: "Perla de las Dunas Hotel",
-        arcCommentary: "A breathless, kinetic pursuit fueled by grief. Bond moves like a tempest through parched deserts, learning that vengeance does not resurrect the dead, nor does it quench the agony of loss."
+        arcCommentary: "A breathless desert pursuit where grief yields to hard-won restraint."
       },
       {
         id: "skyfall",
         order: "03",
         year: 2012,
         localBackdrop: "assets/act-3.webp",
+        audioSrc: "assets/theme-3.mp3",
+        ambientColor: "#101922",
         theme: "LEGACY",
         themeZh: "LEGACY",
-        title: "Skyfall",
-        titleZh: "Skyfall",
+        title: "SKYFALL",
+        titleZh: "SKYFALL",
         director: "Sam Mendes",
-        runtime: "143 MIN",
-        coordinates: {
-          location: "Glencoe, Scottish Highlands",
-          geo: "56.6639° N, 5.0567° W"
-        },
+        location: "London · Shanghai · Glencoe / Roger Deakins",
+        signatureProp: "Biometric Walther PPK · Aston Martin DB5",
         palette: {
-          primary: "#101214",
-          accent: "#9BA3AB",
-          overlay: "rgba(155, 163, 171, 0.08)"
-        },
-        themeSong: {
-          title: "Skyfall",
-          artist: "Adele"
+          primary: "#101922",
+          accent: "#9BA3AB"
         },
         quote: "Sometimes the old ways are the best.",
         quoteZh: "Sometimes the old ways are the best.",
-        quoteContext: "Skyfall Lodge, Glencoe",
-        quoteContextZh: "Skyfall Lodge, Glencoe",
-        arcCommentary: "Returning from the grave broken and obsolete, Bond confronts the specters of maternal authority and fractured identity in the mist-shrouded moors of his ancestral childhood. The sky falls, and the myth is reforged."
+        arcCommentary: "Broken and obsolete, Bond confronts ancestral ghosts amid Highland mist."
       },
       {
         id: "spectre",
         order: "04",
         year: 2015,
         localBackdrop: "assets/act-4.webp",
+        audioSrc: "assets/theme-4.mp3",
+        ambientColor: "#1e140e",
         theme: "SHADOW",
         themeZh: "SHADOW",
-        title: "Spectre",
-        titleZh: "Spectre",
+        title: "SPECTRE",
+        titleZh: "SPECTRE",
         director: "Sam Mendes",
-        runtime: "148 MIN",
-        coordinates: {
-          location: "Mexico City & Austrian Alps",
-          geo: "19.4326° N, 99.1332° W"
-        },
+        location: "Mexico City · Rome · Austrian Alps",
+        signatureProp: "Omega Seamaster 300 · Tom Ford O’Connor",
         palette: {
-          primary: "#0D0C09",
-          accent: "#B59B6A",
-          overlay: "rgba(181, 155, 106, 0.08)"
-        },
-        themeSong: {
-          title: "Writing's on the Wall",
-          artist: "Sam Smith"
+          primary: "#1e140e",
+          accent: "#B59B6A"
         },
         quote: "A gun gives you an illusion of personal power... you have a choice.",
         quoteZh: "A gun gives you an illusion of personal power... you have a choice.",
-        quoteContext: "Westminster Bridge, London",
-        quoteContextZh: "Westminster Bridge, London",
-        arcCommentary: "An ominous web spun in darkness connects all past wounds to a single architect of pain. For the first time on Westminster Bridge, Bond chooses love and walking away over the mechanical repetition of execution."
+        arcCommentary: "Facing the architect of his pain, Bond chooses mercy over execution."
       },
       {
         id: "no-time-to-die",
         order: "05",
         year: 2021,
         localBackdrop: "assets/act-5.webp",
+        audioSrc: "assets/theme-5.mp3",
+        ambientColor: "#16181c",
         theme: "SACRIFICE",
         themeZh: "SACRIFICE",
-        title: "No Time to Die",
-        titleZh: "No Time to Die",
+        title: "NO TIME TO DIE",
+        titleZh: "NO TIME TO DIE",
         director: "Cary Joji Fukunaga",
-        runtime: "163 MIN",
-        coordinates: {
-          location: "Matera, Italy & Faroe Islands",
-          geo: "40.6664° N, 16.6043° E"
-        },
+        location: "Matera · Norway · Faroe Islands / Linus Sandgren",
+        signatureProp: "Omega Seamaster 007 Titanium · N.Peal Knit",
         palette: {
-          primary: "#091012",
-          accent: "#7D9B8F",
-          overlay: "rgba(125, 155, 143, 0.08)"
-        },
-        themeSong: {
-          title: "No Time to Die",
-          artist: "Billie Eilish"
+          primary: "#16181c",
+          accent: "#7D9B8F"
         },
         quote: "The proper function of man is to live, not to exist.",
         quoteZh: "The proper function of man is to live, not to exist.",
-        quoteContext: "Safin's Island Facility",
-        quoteContextZh: "Safin's Island Facility",
-        arcCommentary: "The definitive dusk of a legendary operational arc. No longer fighting merely for Queen and country, but for the untainted future of those he loves, finding eternity in voluntary self-immolation under the morning light."
+        arcCommentary: "Embracing mortal sacrifice under dawn skies to secure a future unstained."
       }
     ],
 
@@ -581,7 +502,7 @@ const SITE_DATA = {
     ],
 
     // ------------------------------------------
-    // Soundtrack Legacy
+    // The Sonic Legacy
     // ------------------------------------------
     soundtracks: [
       {
@@ -591,8 +512,7 @@ const SITE_DATA = {
         film: "Casino Royale",
         filmZh: "Casino Royale",
         audioSrc: "assets/theme-1.mp3",
-        tag: "RAW RESURRECTION",
-        critique: "Brash, muscular hard-rock overture shattering the orchestral complacency of the franchise, introducing a 007 who bleeds."
+        critique: "Muscular hard-rock overture introducing a 007 who bleeds."
       },
       {
         year: 2008,
@@ -601,8 +521,7 @@ const SITE_DATA = {
         film: "Quantum of Solace",
         filmZh: "Quantum of Solace",
         audioSrc: "assets/theme-2.mp3",
-        tag: "FRACTURED SOUL",
-        critique: "Aggressive fuzz guitar duel and tempestuous brass harmonies mirroring an agent unraveling in the furnace of unvented revenge."
+        critique: "Fuzz-driven duel mirroring an operative unraveling in grief."
       },
       {
         year: 2012,
@@ -611,8 +530,7 @@ const SITE_DATA = {
         film: "Skyfall",
         filmZh: "Skyfall",
         audioSrc: "assets/theme-3.mp3",
-        tag: "SYMPHONIC ELEGY",
-        critique: "Velvet brass, mournful strings, and a somber, brooding vocal delivery celebrating the mortal vulnerability and ancient dignity of MI6."
+        critique: "Velvet brass and mournful strings celebrating ancient dignity."
       },
       {
         year: 2015,
@@ -621,29 +539,26 @@ const SITE_DATA = {
         film: "Spectre",
         filmZh: "Spectre",
         audioSrc: "assets/theme-4.mp3",
-        tag: "SHADOW FALSETTO",
-        critique: "Fragile, operatic falsetto drifting over cinematic sweeps, exposing an operative stripped bare by the omnipresent puppet master."
+        critique: "Fragile falsetto drifting over shadows of a lifelong web."
       },
       {
         year: 2021,
         track: "No Time to Die",
-        artist: "Billie Eilish & Finneas (Orch. Hans Zimmer)",
+        artist: "Billie Eilish & Finneas",
         film: "No Time to Die",
         filmZh: "No Time to Die",
         audioSrc: "assets/theme-5.mp3",
-        tag: "MORTAL REQUIEM",
-        critique: "Haunting, whispered restraint swelling into a devastating symphonic crescendo, bidding farewell to the hero who gave everything."
+        critique: "Whispered restraint swelling into Hans Zimmer's final requiem."
       }
     ]
   }
 };
 
-// Freeze data to guarantee immutability across phases
+// Freeze data to guarantee immutability
 if (typeof Object.freeze === "function") {
   Object.freeze(SITE_DATA);
 }
 
-// Global scope attachment for browser & Node.js test environments
 if (typeof window !== "undefined") {
   window.SITE_DATA = SITE_DATA;
 }
@@ -653,4 +568,3 @@ if (typeof globalThis !== "undefined") {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = SITE_DATA;
 }
-

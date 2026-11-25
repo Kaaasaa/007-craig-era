@@ -1,24 +1,24 @@
 /**
- * MI6 DECLASSIFIED ARCHIVE // DANIEL CRAIG 007 ERA (2006-2021)
- * Visual Design System: Swiss Grid & Film Noir Quiet Luxury
+ * 007 // CRAIG ERA (2006-2021)
+ * Visual Design System: Cinema Exhibition, Swiss Precision & Matte Noir
  */
 
 /* ==========================================================================
    1. DESIGN TOKENS & SYSTEM VARIABLES
    ========================================================================== */
 :root {
-  /* Chromatic Hierarchy: Deep Charcoal, Warm Ivory & Restrained Silver */
-  --bg-primary: #111111;              /* Deep matte charcoal */
-  --bg-secondary: #161513;            /* Warm dark slate */
-  --bg-tertiary: #1C1A18;             /* Elevated charcoal */
-  --text-primary: #EAE6DF;            /* Warm ivory / unbleached cotton */
-  --text-muted: #98938B;              /* Muted warm grey (high-legibility editorial) */
-  --text-dim: #6C6861;                /* Subdued archival metadata grey */
-  --border-hairline: rgba(234, 230, 223, 0.09); /* 1px archival hairline */
-  --border-active: rgba(234, 230, 223, 0.24);   /* Focus & hover border */
-  --accent-silver: #C5C2BC;           /* Brushed metallic silver */
-  --accent-gold-subtle: #B59B6A;      /* Muted classical gold */
-  --chapter-accent: #8FA8BE;          /* Active film chapter chromatic accent */
+  /* Chromatic Hierarchy: Pure Matte Charcoal-Black, Warm Ivory & Brushed Silver */
+  --bg-primary: #09090b;
+  --bg-secondary: #121214;
+  --bg-tertiary: #19191b;
+  --bg-curtain: #080808;
+  --text-primary: #EAE6DF;
+  --text-muted: #98938B;
+  --text-dim: #6C6861;
+  --border-hairline: rgba(234, 230, 223, 0.09);
+  --border-active: rgba(234, 230, 223, 0.24);
+  --accent-silver: #C5C2BC;
+  --chapter-accent: #8FA8BE;
 
   /* Typography Stacks */
   --font-serif: 'Cormorant Garamond', 'Noto Serif SC', 'Songti SC', Georgia, serif;
@@ -27,7 +27,7 @@
 
   /* Layout Architecture */
   --container-max: 1320px;
-  --nav-height: 64px;
+  --nav-height: 56px;
   --hairline: 1px solid var(--border-hairline);
 
   /* Transitions */
@@ -69,7 +69,6 @@ body {
   min-height: 100svh;
 }
 
-/* Selection State */
 ::selection {
   background-color: var(--text-primary);
   color: var(--bg-primary);
@@ -88,7 +87,6 @@ button {
   cursor: pointer;
 }
 
-/* Container Constraint */
 .container-editorial {
   width: 100%;
   max-width: var(--container-max);
@@ -99,9 +97,8 @@ button {
 }
 
 /* ==========================================================================
-   3. TEXTURE OVERLAYS: FILM GRAIN & VIGNETTE
+   3. 35MM FILM GRAIN & ATMOSPHERIC VIGNETTE
    ========================================================================== */
-/* Static SVG Film Grain: Zero interaction obstruction */
 .film-grain {
   position: fixed;
   inset: 0;
@@ -109,13 +106,12 @@ button {
   height: 100%;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.038;
+  opacity: 0.028;
   mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain35mm'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain35mm)'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
 
-/* Viewport Vignette: Soft Cinematic Falloff */
 .film-vignette {
   position: fixed;
   inset: 0;
@@ -123,24 +119,23 @@ button {
   height: 100%;
   pointer-events: none;
   z-index: 9998;
-  background: radial-gradient(circle at 50% 50%, transparent 60%, rgba(0, 0, 0, 0.72) 100%);
+  background: radial-gradient(circle at 50% 50%, transparent 62%, rgba(0, 0, 0, 0.72) 100%);
 }
 
 /* ==========================================================================
-   4. NAVIGATION BAR: FROSTED GLASS & MONOSPACE CODE
+   4. MINIMALIST FROSTED GLASS NAVIGATION BAR
    ========================================================================== */
 .site-header {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: var(--nav-height);
-  z-index: 1000;
-  background: rgba(17, 17, 17, 0.72);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: var(--hairline);
-  transition: border-color var(--duration-medium) ease;
+  height: 56px;
+  z-index: 50;
+  background: linear-gradient(to bottom, rgba(9, 9, 11, 0.68) 0%, rgba(9, 9, 11, 0.28) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: none;
 }
 
 .nav-inner {
@@ -153,55 +148,131 @@ button {
   justify-content: space-between;
 }
 
-/* Brand Identifier */
 .nav-brand {
   display: flex;
-  align-items: baseline;
-  gap: 1.25rem;
+  align-items: center;
 }
 
-.brand-link {
+.nav-logo-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  letter-spacing: 0.14em;
-  color: var(--text-primary);
-  text-transform: uppercase;
-  white-space: nowrap;
 }
 
-.brand-sigil {
-  font-weight: 500;
-  letter-spacing: 0.2em;
+.nav-007-logo {
+  height: 22px;
+  width: auto;
+  display: block;
+  filter: brightness(0) invert(0.92);
+  opacity: 0.88;
+  transition: opacity 0.25s ease;
 }
 
-.brand-divider {
-  color: var(--text-dim);
-  font-size: 0.75rem;
+.nav-logo-btn:hover .nav-007-logo {
+  opacity: 1;
 }
 
-.brand-code {
-  color: var(--accent-silver);
-}
-
-.brand-sub {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.2em;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  display: inline-block;
-  white-space: nowrap;
-}
-
-/* Nav Controls */
 .nav-controls {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
   flex-shrink: 0;
+}
+
+/* Frameless Icon-Only Audio Control + Auto-Collapsing 5-Step Precision Gain Meter */
+.master-audio-control {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.sound-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #737373;
+  transition: color var(--duration-fast) ease, opacity var(--duration-fast) ease;
+}
+
+.sound-toggle-btn:hover,
+.master-audio-control.is-sound-on .sound-toggle-btn {
+  color: #EAE6DF;
+}
+
+.sound-icon {
+  flex-shrink: 0;
+  display: block;
+}
+
+.sound-icon-on {
+  display: none;
+}
+
+.master-audio-control.is-sound-on .sound-icon-off,
+.master-audio-control.is-sound-standby .sound-icon-off {
+  display: none;
+}
+
+.master-audio-control.is-sound-on .sound-icon-on,
+.master-audio-control.is-sound-standby .sound-icon-on {
+  display: block;
+}
+
+.master-audio-control.is-sound-standby .sound-toggle-btn {
+  color: rgba(234, 230, 223, 0.52);
+  animation: soundStandbyPulse 2.6s ease-in-out infinite;
+}
+
+@keyframes soundStandbyPulse {
+  0%, 100% { opacity: 0.42; }
+  50% { opacity: 0.85; }
+}
+
+/* Half-Hidden Precision Vertical Gain Meter (JS .is-expanded + 300ms auto-collapse) */
+.gain-meter-wrap {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 18px;
+  max-width: 0;
+  opacity: 0;
+  margin-left: 0;
+  padding: 0 0 2px 0;
+  overflow: hidden;
+  pointer-events: none;
+  cursor: ew-resize;
+  touch-action: none;
+  user-select: none;
+  transition: max-width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.28s ease,
+              margin-left 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.master-audio-control.is-expanded .gain-meter-wrap {
+  max-width: 44px;
+  opacity: 1;
+  margin-left: 10px;
+  pointer-events: auto;
+}
+
+.gain-bar {
+  display: block;
+  width: 2px;
+  background-color: rgba(234, 230, 223, 0.25);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+
+.gain-bar.is-lit {
+  background-color: #EAE6DF;
 }
 
 /* Bilingual Engine Switcher */
@@ -209,7 +280,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem 0.35rem;
+  padding: 0.2rem 0.25rem;
   white-space: nowrap;
 }
 
@@ -219,7 +290,7 @@ button {
   letter-spacing: 0.12em;
   color: var(--text-muted);
   padding: 0.2rem 0.35rem;
-  transition: color var(--duration-fast) ease, opacity var(--duration-fast) ease;
+  transition: color var(--duration-fast) ease;
   position: relative;
   white-space: nowrap;
 }
@@ -251,74 +322,54 @@ button {
 }
 
 /* ==========================================================================
-   5. HERO / PROLOGUE SECTION (100vh FULL VIEWPORT)
+   5. HERO / PROLOGUE SECTION (DECLUTTERED EDITORIAL OPENING)
    ========================================================================== */
 .hero-section {
   min-height: 100vh;
   min-height: 100svh;
-  padding-top: calc(var(--nav-height) + 2rem);
+  padding-top: calc(var(--nav-height) + 3rem);
   padding-bottom: 3rem;
   display: flex;
   align-items: center;
   position: relative;
-  border-bottom: var(--hairline);
+  background-color: var(--bg-primary);
   overflow: hidden;
+}
+
+.hero-section::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 16vh;
+  background: linear-gradient(to bottom, transparent 0%, var(--bg-primary) 100%);
+  pointer-events: none;
+  z-index: 3;
 }
 
 .hero-inner {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: calc(100vh - var(--nav-height) - 5rem);
-  min-height: calc(100svh - var(--nav-height) - 5rem);
+  min-height: calc(100vh - var(--nav-height) - 6rem);
+  min-height: calc(100svh - var(--nav-height) - 6rem);
   width: 100%;
   position: relative;
   z-index: 2;
 }
 
-/* Top Meta Bar */
-.hero-meta-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 2rem;
-  border-bottom: var(--hairline);
-}
-
-.mono-meta {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.22em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.clearance-tag {
-  color: var(--accent-silver);
-  letter-spacing: 0.2em;
-}
-
-/* Hero Centerpiece Typography */
 .hero-centerpiece {
   margin: auto 0;
-  padding: 4.5rem 0;
-  max-width: clamp(520px, 56vw, 820px);
+  padding: 4rem 0;
+  max-width: clamp(500px, 52vw, 760px);
   position: relative;
   z-index: 2;
 }
 
-.hero-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.32em;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  margin-bottom: 1.75rem;
-}
-
 .hero-title {
   font-family: var(--font-serif);
-  font-size: clamp(3.25rem, 8.2vw, 7.25rem);
+  font-size: clamp(3.35rem, 8.2vw, 7.25rem);
   font-weight: 300;
   line-height: 0.94;
   letter-spacing: 0.04em;
@@ -328,11 +379,11 @@ button {
 
 .hero-title-zh {
   font-family: var(--font-serif);
-  font-size: clamp(1.35rem, 2.8vw, 2.4rem);
+  font-size: clamp(1.35rem, 2.7vw, 2.35rem);
   font-weight: 300;
   letter-spacing: 0.26em;
   color: var(--accent-silver);
-  margin-top: 0.9rem;
+  margin-top: 0.95rem;
 }
 
 .hero-subtitle {
@@ -341,16 +392,16 @@ button {
   letter-spacing: 0.28em;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin-top: 2rem;
+  margin-top: 2.15rem;
 }
 
 .hero-lead {
-  font-size: clamp(0.9375rem, 1.15vw, 1.0625rem);
+  font-size: clamp(0.9375rem, 1.12vw, 1.0625rem);
   font-weight: 300;
-  line-height: 1.9;
+  line-height: 1.85;
   color: var(--text-muted);
-  max-width: 620px;
-  margin-top: 2.25rem;
+  max-width: 560px;
+  margin-top: 2.15rem;
   border-left: 1px solid var(--border-hairline);
   padding-left: 1.5rem;
 }
@@ -359,13 +410,13 @@ button {
 .hero-scroll-cue {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
   padding-top: 2rem;
 }
 
 .scroll-track {
   width: 1px;
-  height: 48px;
+  height: 44px;
   background: var(--border-hairline);
   position: relative;
   overflow: hidden;
@@ -389,13 +440,13 @@ button {
 .scroll-text-group {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .mono-cue {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  letter-spacing: 0.25em;
+  letter-spacing: 0.24em;
   color: var(--text-primary);
   text-transform: uppercase;
 }
@@ -406,9 +457,7 @@ button {
   letter-spacing: 0.05em;
 }
 
-/* --------------------------------------------------------------------------
-   HERO SILHOUETTE & NOIR RIM GLOW INTEGRATION
-   -------------------------------------------------------------------------- */
+/* Hero Right-Hand Daniel Craig Silhouette with Cinema Noir Rim Glow */
 .hero-silhouette-wrap {
   position: absolute;
   right: 6vw;
@@ -428,7 +477,7 @@ button {
   position: absolute;
   inset: -15% -25%;
   pointer-events: none;
-  background: radial-gradient(circle at 55% 45%, rgba(234, 230, 223, 0.16) 0%, rgba(17, 17, 17, 0) 65%);
+  background: radial-gradient(circle at 55% 45%, rgba(234, 230, 223, 0.16) 0%, rgba(9, 9, 11, 0) 65%);
   z-index: 1;
 }
 
@@ -441,7 +490,7 @@ button {
   transform: scaleX(-1);
   transform-origin: center bottom;
   opacity: 0.88;
-  filter: brightness(0) drop-shadow(0 0 1px rgba(17, 17, 17, 0.9));
+  filter: brightness(0) drop-shadow(0 0 1px rgba(9, 9, 11, 0.9));
   mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
   z-index: 2;
@@ -449,7 +498,7 @@ button {
 }
 
 /* ==========================================================================
-   6. GUN BARREL APERTURE ONE-SHOT STAGE (PHASE 2+3 GSAP SCROLLTRIGGER)
+   6. ONE-SHOT STAGE: SINGLE BACKDROP STACK + OPTICAL SPOTLIGHT + 2.39:1 CLIMAX
    ========================================================================== */
 .one-shot-stage {
   position: relative;
@@ -462,7 +511,23 @@ button {
   will-change: transform;
 }
 
-/* Base Stage Layer Definition */
+/* Chapter-Specific Accent Tokens for Mechanical Vernier Ruler */
+.one-shot-stage[data-act="0"] {
+  --chapter-accent: #8FA8BE;
+}
+.one-shot-stage[data-act="1"] {
+  --chapter-accent: #B88B58;
+}
+.one-shot-stage[data-act="2"] {
+  --chapter-accent: #9BA3AB;
+}
+.one-shot-stage[data-act="3"] {
+  --chapter-accent: #B59B6A;
+}
+.one-shot-stage[data-act="4"] {
+  --chapter-accent: #7D9B8F;
+}
+
 .stage-layer {
   position: absolute;
   inset: 0;
@@ -471,9 +536,38 @@ button {
   pointer-events: none;
 }
 
-/* --------------------------------------------------------------------------
-   LAYER 1: SINGLE 5-ACT BACKDROP STACK (z-index: 1)
-   -------------------------------------------------------------------------- */
+/* LAYER 1: FULL 100VH CINEMA VIEWPORT + TRANSLUCENT TOP VIGNETTE (z-index: 1) */
+.cinema-viewport {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+  background-color: #09090b;
+  pointer-events: none;
+}
+
+.cinema-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  background:
+    linear-gradient(to bottom, rgba(9, 9, 11, 0.42) 0%, transparent 16%),
+    linear-gradient(to top, #09090b 0%, rgba(9, 9, 11, 0.88) 18%, rgba(9, 9, 11, 0.35) 32%, transparent 46%),
+    radial-gradient(ellipse 78% 72% at 50% 44%, transparent 50%, rgba(9, 9, 11, 0.65) 85%, #09090b 100%);
+}
+
+/* Act 03 (Skyfall): Strengthened top & right edge scrim over bright Highland mist */
+.one-shot-stage[data-act="2"] .cinema-vignette {
+  background:
+    linear-gradient(to bottom, rgba(9, 9, 11, 0.72) 0%, rgba(9, 9, 11, 0.36) 11%, transparent 24%),
+    linear-gradient(to left, rgba(9, 9, 11, 0.74) 0%, rgba(9, 9, 11, 0.42) 9%, transparent 24%),
+    linear-gradient(to top, #09090b 0%, rgba(9, 9, 11, 0.88) 16%, rgba(9, 9, 11, 0.30) 29%, transparent 42%),
+    radial-gradient(ellipse 76% 70% at 50% 45%, transparent 46%, rgba(9, 9, 11, 0.72) 84%, #09090b 100%);
+}
+
 .stage-backdrops {
   position: absolute;
   inset: 0;
@@ -498,55 +592,24 @@ button {
   opacity: 1;
 }
 
-/* Incremental Z-Index Stacking: Layered Cross-Cover (Zero-Flicker) */
+/* Incremental Z-Index Stacking */
 .act-bg-1 { z-index: 1; }
 .act-bg-2 { z-index: 2; }
 .act-bg-3 { z-index: 3; }
 .act-bg-4 { z-index: 4; }
 .act-bg-5 { z-index: 5; }
 
-/* Chapter-Specific Chromatic Tokens */
-.one-shot-stage[data-act="0"] { --chapter-accent: #8FA8BE; } /* Casino Royale: Cold Steel Blue */
-.one-shot-stage[data-act="1"] { --chapter-accent: #B88B58; } /* Quantum of Solace: Atacama Ochre */
-.one-shot-stage[data-act="2"] { --chapter-accent: #9BA3AB; } /* Skyfall: Desaturated Pewter */
-.one-shot-stage[data-act="3"] { --chapter-accent: #B59B6A; } /* Spectre: Muted Classical Gold */
-.one-shot-stage[data-act="4"] { --chapter-accent: #7D9B8F; } /* No Time to Die: Sea-Slate Green */
-
-/* Ambient Gradients for 5 Acts */
+/* Offline Neutral Matte Charcoal Fallback Underneath Backdrops */
 .act-ambient-gradient {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   z-index: 1;
+  background: #09090b;
 }
 
-/* Act 1: Casino Royale (Cold blue, black, elegance, tension) */
-.bg-casino {
-  background: radial-gradient(ellipse at 38% 45%, rgba(19, 31, 46, 0.96) 0%, rgba(10, 15, 22, 0.98) 55%, #06090D 100%);
-}
-
-/* Act 2: Quantum of Solace (Desert warmth, dust, instability) */
-.bg-quantum {
-  background: radial-gradient(ellipse at 42% 48%, rgba(44, 30, 18, 0.96) 0%, rgba(22, 16, 11, 0.98) 55%, #0D0A07 100%);
-}
-
-/* Act 3: Skyfall (Desaturated grey, isolation, atmosphere, melancholy) */
-.bg-skyfall {
-  background: radial-gradient(ellipse at 50% 42%, rgba(28, 30, 33, 0.96) 0%, rgba(16, 18, 20, 0.98) 55%, #090A0B 100%);
-}
-
-/* Act 4: Spectre (Deep black, muted gold, shadows, classical elegance) */
-.bg-spectre {
-  background: radial-gradient(ellipse at 35% 45%, rgba(28, 23, 15, 0.96) 0%, rgba(13, 11, 9, 0.98) 55%, #070605 100%);
-}
-
-/* Act 5: No Time to Die (Dark navy, muted green, emotional closure) */
-.bg-notimetodie {
-  background: radial-gradient(ellipse at 45% 45%, rgba(15, 28, 26, 0.96) 0%, rgba(9, 16, 18, 0.98) 55%, #05090A 100%);
-}
-
-/* Local Static Backdrop: 100% full viewport with multiple-background gradient fallback */
+/* Local Static Backdrop: 10% Top Breathing Offset Under Translucent Nav (50% 10%, scale 1) */
 .act-backdrop {
   position: absolute;
   inset: 0;
@@ -554,58 +617,25 @@ button {
   height: 100%;
   z-index: 2;
   background-size: cover;
-  background-position: 50% 22%;
+  background-position: 50% 10%;
   background-repeat: no-repeat;
-  filter: brightness(0.90) contrast(1.10);
+  filter: brightness(0.95) contrast(1.06);
   opacity: 1;
   pointer-events: none;
-  will-change: transform;
-  transform: scale(1.0);
-  transform-origin: 50% 22%;
+  transform: scale(1);
+  transform-origin: center top;
 }
 
-.act-bg-1 .act-backdrop {
-  filter: brightness(0.88) contrast(1.14) saturate(0.84);
-}
-.act-bg-2 .act-backdrop {
-  filter: brightness(0.90) contrast(1.10) sepia(0.18) saturate(0.90);
-}
+.act-bg-1 .act-backdrop { filter: brightness(0.94) contrast(1.08) saturate(0.92); }
+.act-bg-2 .act-backdrop { filter: brightness(0.95) contrast(1.06) sepia(0.10) saturate(0.94); }
 .act-bg-3 .act-backdrop {
-  filter: brightness(0.85) contrast(1.12) saturate(0.62);
+  background-position: 50% 8%;
+  filter: brightness(0.80) contrast(1.08);
 }
-.act-bg-4 .act-backdrop {
-  filter: brightness(0.83) contrast(1.18) sepia(0.12) saturate(0.80);
-}
-.act-bg-5 .act-backdrop {
-  filter: brightness(0.88) contrast(1.08) saturate(0.78);
-}
+.act-bg-4 .act-backdrop { filter: brightness(0.94) contrast(1.08) sepia(0.08) saturate(0.90); }
+.act-bg-5 .act-backdrop { filter: brightness(0.96) contrast(1.06) saturate(0.92); }
 
-/* Subtle Chapter-Specific Filmic Tint & Vignette Veil */
-.act-bg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  pointer-events: none;
-}
-
-.act-bg-1::after {
-  background: radial-gradient(circle at 50% 45%, rgba(16, 30, 48, 0.14) 0%, rgba(6, 10, 16, 0.45) 100%);
-}
-.act-bg-2::after {
-  background: radial-gradient(circle at 50% 45%, rgba(92, 62, 34, 0.16) 0%, rgba(14, 10, 7, 0.42) 100%);
-}
-.act-bg-3::after {
-  background: radial-gradient(circle at 50% 45%, rgba(45, 48, 52, 0.14) 0%, rgba(9, 10, 12, 0.48) 100%);
-}
-.act-bg-4::after {
-  background: radial-gradient(circle at 50% 45%, rgba(64, 52, 28, 0.14) 0%, rgba(8, 7, 5, 0.55) 100%);
-}
-.act-bg-5::after {
-  background: radial-gradient(circle at 50% 45%, rgba(16, 38, 36, 0.18) 0%, rgba(6, 11, 13, 0.44) 100%);
-}
-
-/* Subtle Atmospheric Highland Mist / Rain Veil for Skyfall (Act 3) */
+/* Subtle Highland Mist Veil for Skyfall (GSAP exclusively owns opacity) */
 .skyfall-rain {
   position: absolute;
   inset: -120px;
@@ -613,12 +643,11 @@ button {
   pointer-events: none;
   opacity: 0;
   background-image: 
-    linear-gradient(112deg, rgba(234, 230, 223, 0.035) 1px, transparent 1px),
-    linear-gradient(112deg, rgba(155, 163, 171, 0.025) 1px, transparent 1px);
+    linear-gradient(112deg, rgba(234, 230, 223, 0.025) 1px, transparent 1px),
+    linear-gradient(112deg, rgba(155, 163, 171, 0.015) 1px, transparent 1px);
   background-size: 110px 180px, 160px 260px;
   animation: skyfallRain 2.2s linear infinite;
   will-change: transform, opacity;
-  transition: opacity 1s ease;
 }
 
 @keyframes skyfallRain {
@@ -626,131 +655,7 @@ button {
   100% { transform: translate3d(-110px, 180px, 0); }
 }
 
-/* --------------------------------------------------------------------------
-   LAYER 2: LIGHTWEIGHT OPTICAL SPOTLIGHT MASK (z-index: 6, REPLACES CLIP-PATH)
-   -------------------------------------------------------------------------- */
-.aperture-spotlight-mask {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 6;
-  background: radial-gradient(circle at 50% 50%, rgba(17, 17, 17, 0) 27vh, rgba(14, 14, 15, 0.56) 33.5vh, rgba(11, 11, 11, 0.93) 66vh);
-  will-change: opacity, transform;
-}
-
-/* --------------------------------------------------------------------------
-   LAYER 3: GIANT BACKGROUND PARALLAX FILM TITLE (z-index: 7, ABOVE MASK, STABLE OPACITY)
-   -------------------------------------------------------------------------- */
-.stage-giant-titles-layer {
-  z-index: 7;
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.giant-titles-wrapper {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.giant-title-node {
-  position: absolute;
-  left: 50%;
-  top: 48%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  max-width: 82vw;
-  text-align: center;
-  opacity: 0;
-  visibility: hidden;
-  will-change: transform, opacity;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  user-select: none;
-}
-
-.giant-title-node.active,
-.giant-title-node:first-child {
-  opacity: 0.14;
-  visibility: visible;
-}
-
-.giant-title-text {
-  font-family: var(--font-serif);
-  font-size: clamp(3rem, 7.5vw, 7.5rem);
-  font-weight: 300;
-  line-height: 0.95;
-  letter-spacing: 0.14em;
-  color: #EAE6DF;
-  text-transform: uppercase;
-  text-shadow: 0 0 35px rgba(0, 0, 0, 0.95);
-  word-break: break-word;
-  max-width: 82vw;
-}
-
-.giant-title-sub {
-  font-family: var(--font-serif);
-  font-size: clamp(1rem, 2vw, 1.8rem);
-  font-weight: 300;
-  letter-spacing: 0.35em;
-  color: #C5C2BC;
-  margin-top: 0.5rem;
-  display: block;
-  text-shadow: 0 0 25px rgba(0, 0, 0, 0.9);
-}
-
-/* --------------------------------------------------------------------------
-   LAYER 4: PRECISION GUN BARREL RIFLING SVG (z-index: 8, ROTATIONAL DAMPING)
-   -------------------------------------------------------------------------- */
-.stage-rifling-layer {
-  z-index: 8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.rifling-container {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: clamp(520px, 72vh, 880px);
-  height: clamp(520px, 72vh, 880px);
-  will-change: transform, opacity;
-  pointer-events: none;
-}
-
-.gun-barrel-rifling-svg {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  filter: drop-shadow(0 0 12px rgba(0, 0, 0, 0.8));
-}
-
-#rifling-rotor {
-  transform-origin: 500px 500px;
-  will-change: transform;
-}
-
-/* --------------------------------------------------------------------------
-   LAYER 5: VIEWFINDER HUD & BOTTOM SUBTITLES (z-index: 9, IN FRONT)
-   -------------------------------------------------------------------------- */
+/* LAYER 4: L2/L3 CENTERED BOTTOM TWO-LINE TYPOGRAPHY & CROSSHAIR EASTER EGG (z-index: 9) */
 .stage-hud-layer {
   z-index: 9;
   position: absolute;
@@ -760,92 +665,45 @@ button {
   pointer-events: none;
 }
 
-/* Top-Left Viewfinder Archive Stamp */
-.hud-top-left {
-  position: absolute;
-  top: calc(var(--nav-height) + 1.75rem);
-  left: clamp(1.5rem, 4vw, 3.5rem);
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  pointer-events: auto;
-  transition: opacity 0.4s ease;
-}
-
-.hud-archive-stamp {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.24em;
-  color: var(--chapter-accent);
-  text-transform: uppercase;
-  font-variant-numeric: tabular-nums;
-  transition: color 0.6s ease;
-}
-
-.hud-director {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.18em;
-  color: var(--text-dim);
-  text-transform: uppercase;
-}
-
-/* Bottom-Left Location & Coordinates */
-.hud-bottom-left {
-  position: absolute;
-  bottom: 2.25rem;
-  left: clamp(1.5rem, 3.5vw, 3rem);
-  max-width: 245px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  z-index: 5;
-  pointer-events: auto;
-  transition: opacity 0.4s ease;
-}
-
-.hud-location-tag {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.16em;
-  line-height: 1.45;
-  color: var(--text-dim);
-  text-transform: uppercase;
-}
-
-.hud-coords {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  color: var(--chapter-accent);
-  font-variant-numeric: tabular-nums;
-  transition: color 0.6s ease;
-}
-
-/* Bottom Centered Subtitles Bar with Soft Cinematic Upward Gradient */
 .hud-subtitles-bar {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 5rem 1.5rem 2.5rem;
+  padding: 1.5rem 3.75rem clamp(1.75rem, 4.2vh, 2.85rem);
   display: flex;
+  align-items: flex-end;
   justify-content: center;
   text-align: center;
-  background: linear-gradient(to top, rgba(17, 17, 17, 0.95) 0%, rgba(17, 17, 17, 0.78) 50%, transparent 100%);
-  pointer-events: auto;
+  background: transparent;
+  pointer-events: none;
 }
 
 .hud-subtitles-content {
-  max-width: 560px;
+  max-width: 680px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  text-align: center;
+  gap: 0.5rem;
+  pointer-events: auto;
   will-change: transform, opacity;
 }
 
+/* L2: Centered High-Contrast Serif Film Title */
+.hud-film-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.35rem, 2.35vw, 2rem);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  color: #EAE6DF;
+  text-transform: uppercase;
+  line-height: 1.15;
+  text-align: center;
+}
+
+/* L3: Iconic Single-Line Quote */
 .hud-quote {
   margin: 0;
   padding: 0;
@@ -854,127 +712,197 @@ button {
 
 #hud-quote-text {
   font-family: var(--font-serif);
-  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  font-size: clamp(1rem, 1.4vw, 1.2rem);
   font-style: italic;
   font-weight: 400;
   line-height: 1.45;
-  color: var(--text-primary);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+  color: rgba(234, 230, 223, 0.78);
 }
 
-#hud-quote-context {
-  display: block;
+/* Precision Crosshair (+) Dossier Easter Egg (Bottom-Right) */
+.stage-dossier-widget {
+  position: absolute;
+  bottom: clamp(1.5rem, 3.2vh, 2.4rem);
+  right: clamp(1.25rem, 2.8vw, 2.5rem);
+  z-index: 12;
+  pointer-events: auto;
+}
+
+.dossier-crosshair-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-silver);
+  opacity: 0.58;
+  transition: opacity var(--duration-fast) ease, color var(--duration-fast) ease, transform var(--duration-medium) var(--ease-standard);
+}
+
+.dossier-crosshair-btn:hover,
+.stage-dossier-widget.is-open .dossier-crosshair-btn {
+  opacity: 1;
+  color: var(--text-primary);
+}
+
+.stage-dossier-widget.is-open .crosshair-svg {
+  transform: rotate(45deg);
+}
+
+.crosshair-svg {
+  transition: transform var(--duration-medium) var(--ease-standard);
+}
+
+.dossier-popover {
+  position: absolute;
+  bottom: calc(100% + 0.75rem);
+  right: 0;
+  width: min(330px, calc(100vw - 2.5rem));
+  padding: 1.15rem 1.25rem;
+  background: rgba(17, 17, 17, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(234, 230, 223, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.28s var(--ease-standard), transform 0.28s var(--ease-standard);
+}
+
+.stage-dossier-widget.is-open .dossier-popover {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dossier-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.dossier-key {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-style: normal;
+  font-size: 0.625rem;
   letter-spacing: 0.2em;
   color: var(--text-dim);
   text-transform: uppercase;
-  margin-top: 0.35rem;
 }
 
-.hud-commentary {
-  font-family: var(--font-sans);
-  font-size: clamp(0.85rem, 1.05vw, 0.925rem);
-  font-weight: 300;
-  line-height: 1.65;
-  color: var(--text-muted);
-  max-width: 540px;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
+.dossier-val {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
 }
 
-/* --------------------------------------------------------------------------
-   LAYER 6: TIMELINE PROGRESS RULER (z-index: 10)
-   -------------------------------------------------------------------------- */
+/* LAYER 5: MECHANICAL VERNIER SCALE RULER (z-index: 10) */
 .stage-ruler {
   z-index: 10;
   left: auto;
-  right: clamp(1rem, 2.5vw, 2.5rem);
-  top: 50%;
+  right: clamp(1rem, 2.5vw, 2.4rem);
+  top: 46%;
   bottom: auto;
   transform: translateY(-50%);
   width: auto;
   height: auto;
   pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
 }
 
-.ruler-line-track {
-  width: 1px;
-  height: 220px;
-  background: var(--border-hairline);
+.vernier-scale-wrap {
   position: relative;
-  overflow: hidden;
+  width: 96px;
+  height: 240px;
 }
 
-.ruler-progress-fill {
+.vernier-svg {
   position: absolute;
+  right: 0;
   top: 0;
-  left: 0;
-  width: 100%;
-  height: 0%;
-  background: var(--chapter-accent);
-  will-change: height;
-  transition: height 0.12s linear, background-color 0.6s ease;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.vernier-major-tick {
+  stroke: rgba(234, 230, 223, 0.36);
+  stroke-width: 1;
+  transform-box: fill-box;
+  transform-origin: right center;
+  transition: transform 0.35s var(--ease-standard), stroke 0.35s ease, stroke-width 0.35s ease;
+}
+
+.vernier-major-tick.active {
+  stroke: #EAE6DF;
+  stroke-width: 1.5;
+  transform: scaleX(1.85);
 }
 
 .ruler-milestones {
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 220px;
+  position: absolute;
+  inset: 0;
   margin: 0;
   padding: 0;
 }
 
+.ruler-milestones li {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+.ruler-milestones li:nth-child(1) { top: 5%; }
+.ruler-milestones li:nth-child(2) { top: 27.5%; }
+.ruler-milestones li:nth-child(3) { top: 50%; }
+.ruler-milestones li:nth-child(4) { top: 72.5%; }
+.ruler-milestones li:nth-child(5) { top: 95%; }
+
 .ruler-node {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  background: none;
-  border: none;
-  padding: 0.35rem 0.25rem;
+  gap: 0.45rem;
+  padding: 0.5rem 0 0.5rem 0.75rem;
   cursor: pointer;
-  transition: color var(--duration-fast) ease, opacity var(--duration-fast) ease;
 }
 
 .ruler-year {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  color: var(--text-dim);
+  letter-spacing: 0.16em;
+  color: #EAE6DF;
   font-variant-numeric: tabular-nums;
-  transition: color var(--duration-fast) ease;
-}
-
-.ruler-dot {
-  display: block;
-  width: 4px;
-  height: 4px;
-  background-color: var(--text-dim);
-  border-radius: 0;
-  transition: transform var(--duration-fast) ease, background-color 0.6s ease;
-}
-
-.ruler-node:hover .ruler-year {
-  color: var(--text-primary);
-}
-
-.ruler-node:hover .ruler-dot {
-  background-color: var(--text-primary);
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.3s var(--ease-standard), transform 0.3s var(--ease-standard);
+  pointer-events: none;
+  margin-right: 26px;
 }
 
 .ruler-node.active .ruler-year {
-  color: var(--text-primary);
-  font-weight: 500;
+  opacity: 1;
+  transform: translateX(0);
 }
 
-.ruler-node.active .ruler-dot {
-  background-color: var(--chapter-accent);
-  transform: scale(1.6);
+/* Act 03: Crisp edge shadow behind white vernier scale ticks & 2012 over Highland mist */
+.one-shot-stage[data-act="2"] .vernier-svg {
+  filter: drop-shadow(0 1px 4px rgba(9, 9, 11, 0.82));
+}
+
+.one-shot-stage[data-act="2"] .ruler-year {
+  text-shadow: 0 1px 6px rgba(9, 9, 11, 0.9);
+}
+
+.ruler-tick-hit {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 22px;
 }
 
 /* ==========================================================================
@@ -986,7 +914,6 @@ button {
   position: relative;
 }
 
-/* Standard Section Header */
 .section-header {
   margin-bottom: clamp(3rem, 6vw, 4.5rem);
 }
@@ -1040,7 +967,6 @@ button {
 /* ==========================================================================
    8. Q-BRANCH & TAILORING GRID (SWISS 2x2 ARCHITECTURE)
    ========================================================================== */
-/* Scroll Reveal Initial States for Quiet Luxury Micro-Interactions */
 .reveal-item {
   opacity: 0;
   transform: translateY(16px);
@@ -1150,7 +1076,7 @@ button {
 }
 
 /* ==========================================================================
-   9. THE SONIC LEGACY (MINIMAL RECORD CATALOG LIST)
+   9. THE SONIC LEGACY (DECLUTTERED 5-COLUMN + SVG EQUALIZER)
    ========================================================================== */
 .soundtrack-catalog {
   display: flex;
@@ -1159,10 +1085,9 @@ button {
   border-bottom: var(--hairline);
 }
 
-/* Table Header Row */
 .soundtrack-header-row {
   display: grid;
-  grid-template-columns: 72px 1.9fr 1.15fr 1.85fr 2.55fr 118px;
+  grid-template-columns: 72px 2fr 1.3fr 2.8fr 84px;
   align-items: center;
   padding: 1.25rem 1.5rem;
   border-bottom: var(--hairline);
@@ -1173,12 +1098,11 @@ button {
   text-transform: uppercase;
 }
 
-/* Record Row Item */
 .soundtrack-row {
   display: grid;
-  grid-template-columns: 72px 1.9fr 1.15fr 1.85fr 2.55fr 118px;
+  grid-template-columns: 72px 2fr 1.3fr 2.8fr 84px;
   align-items: center;
-  padding: 2rem 1.5rem;
+  padding: 1.85rem 1.5rem;
   border-bottom: var(--hairline);
   position: relative;
   cursor: pointer;
@@ -1207,9 +1131,10 @@ button {
 
 .track-year {
   font-family: var(--font-mono);
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--accent-silver);
   font-weight: 400;
+  font-variant-numeric: tabular-nums;
   transition: color var(--duration-fast) ease;
 }
 
@@ -1252,90 +1177,78 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  padding-right: 1.25rem;
 }
 
 .track-film-sub {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-dim);
-}
-
-.track-tag-col {
-  padding-right: 1.5rem;
-}
-
-.track-tag {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.16em;
-  color: var(--accent-silver);
-  text-transform: uppercase;
 }
 
 .track-critique {
   font-size: 0.875rem;
   font-weight: 300;
-  line-height: 1.75;
+  line-height: 1.7;
   color: var(--text-muted);
-  padding-left: 0.5rem;
   padding-right: 1rem;
   transition: color var(--duration-fast) ease;
 }
 
-/* Right-Side Minimalist Audio Preview Status */
-.track-audio-status {
+/* Right-Side Geometric SVG Audio Control & 4-Bar Equalizer */
+.track-audio-ctrl {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.55rem;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.16em;
+  gap: 0.6rem;
   color: #737373;
-  text-transform: uppercase;
-  white-space: nowrap;
   justify-self: end;
   transition: color var(--duration-fast) ease;
 }
 
-.soundtrack-row:hover .track-audio-status {
+.soundtrack-row:hover .track-audio-ctrl {
   color: var(--accent-silver);
 }
 
-.audio-pulse-dot {
+.icon-play-svg {
+  display: block;
+}
+
+.icon-pause-svg,
+.eq-bars-svg {
   display: none;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #EAE6DF;
-  flex-shrink: 0;
 }
 
-.soundtrack-row.is-playing .audio-pulse-dot {
-  display: inline-block;
-  animation: audioPulse 1.5s ease-in-out infinite;
+.soundtrack-row.is-playing .icon-play-svg {
+  display: none;
 }
 
-@keyframes audioPulse {
-  0%, 100% {
-    opacity: 0.35;
-    transform: scale(0.85);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.15);
-  }
+.soundtrack-row.is-playing .icon-pause-svg,
+.soundtrack-row.is-playing .eq-bars-svg {
+  display: block;
 }
 
-/* Playing State: Brighten entire row typography to Warm Ivory (#EAE6DF) */
+.eq-bar {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+}
+
+.soundtrack-row.is-playing .eq-bar-1 { animation: eqBounce 0.9s ease-in-out infinite 0s; }
+.soundtrack-row.is-playing .eq-bar-2 { animation: eqBounce 0.75s ease-in-out infinite 0.18s; }
+.soundtrack-row.is-playing .eq-bar-3 { animation: eqBounce 1.05s ease-in-out infinite 0.34s; }
+.soundtrack-row.is-playing .eq-bar-4 { animation: eqBounce 0.82s ease-in-out infinite 0.1s; }
+
+@keyframes eqBounce {
+  0%, 100% { transform: scaleY(0.32); opacity: 0.65; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
 .soundtrack-row.is-playing .track-year,
 .soundtrack-row.is-playing .track-name,
 .soundtrack-row.is-playing .track-artist,
 .soundtrack-row.is-playing .track-film,
 .soundtrack-row.is-playing .track-film-sub,
-.soundtrack-row.is-playing .track-tag,
 .soundtrack-row.is-playing .track-critique,
-.soundtrack-row.is-playing .track-audio-status {
+.soundtrack-row.is-playing .track-audio-ctrl {
   color: #EAE6DF;
 }
 
@@ -1364,141 +1277,110 @@ button {
 }
 
 /* ==========================================================================
-   10. MI6 DOSSIER FOOTER (DECLASSIFIED LOGBOOK)
+   10. CINEMATIC CURTAIN CALL (FINAL BLACKOUT TRIBUTE)
    ========================================================================== */
-.site-footer {
-  padding: clamp(5rem, 8vw, 8rem) 0 4rem;
-  background: var(--bg-primary);
-}
-
-.footer-inner {
+.curtain-call {
+  min-height: 70vh;
+  min-height: 70svh;
+  background-color: var(--bg-curtain);
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-}
-
-.footer-primary-status {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.status-marker {
-  width: 5px;
-  height: 5px;
-  background-color: var(--accent-silver);
-  flex-shrink: 0;
-}
-
-.footer-dossier-line {
-  font-family: var(--font-mono);
-  font-size: clamp(0.75rem, 1.15vw, 0.85rem);
-  letter-spacing: 0.24em;
-  color: var(--text-primary);
-  text-transform: uppercase;
-}
-
-.footer-jurisdiction {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.22em;
-  color: var(--text-dim);
-  text-transform: uppercase;
-}
-
-.footer-divider {
-  width: 100%;
-  height: 1px;
-  background: var(--border-hairline);
-  margin: 2rem 0 1rem;
-}
-
-.footer-bottom-row {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 2rem;
+  padding: clamp(6rem, 12vh, 9rem) 0 3rem;
 }
 
-.footer-disclaimer {
-  font-size: 0.75rem;
+.curtain-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+
+.curtain-center {
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.15rem;
+}
+
+.curtain-quote {
+  font-family: var(--font-serif);
+  font-size: clamp(1.75rem, 3.6vw, 3rem);
   font-weight: 300;
-  color: var(--text-dim);
-  max-width: 680px;
-  line-height: 1.6;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  color: var(--text-primary);
+  line-height: 1.25;
 }
 
-.back-to-top-btn {
+.curtain-quote-zh {
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  font-weight: 300;
+  letter-spacing: 0.24em;
+  color: var(--text-muted);
+}
+
+.curtain-era-mark {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  color: var(--text-dim);
+  margin-top: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.curtain-top-btn {
+  margin-top: 2.25rem;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.2em;
-  color: var(--text-muted);
-  padding: 0.4rem 0.8rem;
-  border: 1px solid var(--border-hairline);
-  transition: all var(--duration-fast) ease;
-  white-space: nowrap;
+  justify-content: center;
+  color: var(--text-dim);
+  border: 1px solid rgba(234, 230, 223, 0.08);
+  transition: color var(--duration-fast) ease, border-color var(--duration-fast) ease, transform var(--duration-fast) ease;
 }
 
-.back-to-top-btn:hover {
+.curtain-top-btn:hover {
   color: var(--text-primary);
   border-color: var(--border-active);
-  background: rgba(234, 230, 223, 0.03);
+  transform: translateY(-3px);
 }
 
-.top-icon {
-  stroke: currentColor;
-  transition: transform var(--duration-fast) ease;
-}
-
-.back-to-top-btn:hover .top-icon {
-  transform: translateY(-2px);
+.curtain-credit {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.28em;
+  color: rgba(152, 147, 139, 0.42);
+  text-transform: uppercase;
+  padding-top: 3rem;
 }
 
 /* ==========================================================================
    11. RESPONSIVE MEDIA QUERIES
    ========================================================================== */
-@media (max-width: 1199px) {
-  .hud-bottom-left {
-    top: calc(var(--nav-height) + 4.4rem);
-    bottom: auto;
-    max-width: 320px;
-  }
-}
-
 @media (max-width: 1120px) {
-  .giant-title-text {
-    font-size: clamp(3.5rem, 9.5vw, 7.5rem);
-    letter-spacing: 0.12em;
-  }
-
   .soundtrack-header-row {
     display: none;
   }
 
   .soundtrack-row {
-    grid-template-columns: 70px 1fr 1fr;
-    gap: 1.25rem;
-  }
-
-  .track-tag-col {
-    grid-column: 2 / 3;
-    padding-right: 0;
+    grid-template-columns: 68px 1fr 1fr 76px;
+    gap: 1rem 1.25rem;
   }
 
   .track-critique {
     grid-column: 2 / 4;
-    padding-left: 0;
     padding-right: 0;
-    margin-top: 0.5rem;
   }
 
-  .track-audio-status {
-    grid-column: 3 / 4;
+  .track-audio-ctrl {
+    grid-column: 4 / 5;
     grid-row: 1;
-    justify-self: end;
   }
 }
 
@@ -1511,18 +1393,18 @@ button {
     padding: 0 1rem;
   }
 
-  .brand-sub {
-    display: none;
-  }
-
-  .brand-link {
-    font-size: 0.6875rem;
-    letter-spacing: 0.08em;
-    gap: 0.35rem;
+  .nav-007-logo {
+    height: 19px;
   }
 
   .nav-controls {
-    gap: 0.5rem;
+    gap: 0.75rem;
+  }
+
+  .master-audio-control.is-expanded .gain-meter-wrap {
+    max-width: 40px;
+    margin-left: 8px;
+    gap: 3px;
   }
 
   .lang-switcher {
@@ -1536,22 +1418,21 @@ button {
     letter-spacing: 0.08em;
   }
 
-  .hero-meta-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
+  /* Mobile Silhouette Visibility Calibration */
+  .hero-silhouette-wrap {
+    right: -8vw;
+    bottom: 0;
+    height: 64svh;
+    opacity: 1;
+    z-index: 1;
   }
 
-  .hero-silhouette-wrap {
-    right: -4vw;
-    bottom: 0;
-    height: 60vh;
-    opacity: 0.22;
-    z-index: 0;
+  .hero-silhouette-glow {
+    background: radial-gradient(circle at 55% 42%, rgba(234, 230, 223, 0.22) 0%, rgba(9, 9, 11, 0) 68%);
   }
 
   .hero-silhouette-img {
-    opacity: 0.22;
+    opacity: 0.42;
   }
 
   .hero-inner {
@@ -1560,127 +1441,61 @@ button {
   }
 
   .hero-centerpiece {
-    padding: 2.5rem 0;
+    padding: 2rem 0;
     max-width: 100%;
   }
 
-  /* Optical Spotlight Mask adjustment for Mobile */
-  .aperture-spotlight-mask {
-    background: radial-gradient(circle at 50% 41%, rgba(17, 17, 17, 0) 31vw, rgba(14, 14, 15, 0.62) 39vw, rgba(11, 11, 11, 0.94) 80vw);
-  }
-
-  .rifling-container {
-    width: clamp(290px, 82vw, 390px);
-    height: clamp(290px, 82vw, 390px);
-    top: 41%;
-  }
-
-  .giant-title-node {
-    top: 41%;
-  }
-
-  .giant-title-text {
-    font-size: clamp(1.85rem, 9vw, 3.5rem);
-    letter-spacing: 0.08em;
-  }
-
-  .giant-title-sub {
-    font-size: 0.8125rem;
-    letter-spacing: 0.22em;
-  }
-
-  .hud-top-left {
-    top: calc(var(--nav-height) + 0.85rem);
-    left: 1rem;
-    max-width: calc(100vw - 3.75rem);
-    gap: 0.2rem;
-  }
-
-  .hud-archive-stamp {
-    font-size: 0.6875rem;
-    letter-spacing: 0.14em;
-  }
-
-  .hud-director {
-    font-size: 0.625rem;
-    letter-spacing: 0.12em;
-  }
-
-  /* Left-bottom coordinates docked directly below top-left archive code */
-  .hud-bottom-left {
-    display: flex;
-    top: calc(var(--nav-height) + 3.45rem);
-    bottom: auto;
-    left: 1rem;
-    max-width: calc(100vw - 3.75rem);
-    gap: 0.15rem;
-    z-index: 5;
-  }
-
-  .hud-location-tag {
-    font-size: 0.5625rem;
-    letter-spacing: 0.12em;
-    color: var(--text-dim);
-  }
-
-  .hud-coords {
-    font-size: 0.625rem;
-    letter-spacing: 0.1em;
-    color: var(--chapter-accent);
-  }
-
+  /* Mobile Full-Bleed Cinema Subtitles & Positioning */
   .hud-subtitles-bar {
-    padding: 2.25rem 1.15rem max(1.75rem, env(safe-area-inset-bottom));
-    background: linear-gradient(to top, rgba(17, 17, 17, 0.98) 0%, rgba(17, 17, 17, 0.86) 65%, transparent 100%);
+    padding: 1.25rem 3.1rem max(1.65rem, env(safe-area-inset-bottom));
+    background: transparent;
   }
 
   .hud-subtitles-content {
-    gap: 0.5rem;
+    gap: 0.4rem;
     max-width: 100%;
+  }
+
+  .hud-film-title {
+    font-size: clamp(1.15rem, 5vw, 1.45rem);
+    letter-spacing: 0.1em;
   }
 
   #hud-quote-text {
-    font-size: clamp(0.95rem, 3.8vw, 1.15rem);
-    line-height: 1.38;
+    font-size: clamp(0.92rem, 3.6vw, 1.1rem);
+    line-height: 1.4;
   }
 
-  #hud-quote-context {
-    font-size: 0.625rem;
-    margin-top: 0.25rem;
-    letter-spacing: 0.14em;
+  /* Crosshair Easter Egg Quiet Bottom-Right Placement */
+  .stage-dossier-widget {
+    bottom: max(1.25rem, env(safe-area-inset-bottom));
+    right: 0.85rem;
   }
 
-  .hud-commentary {
-    font-size: 0.78125rem;
-    line-height: 1.55;
-    max-width: 100%;
+  .dossier-popover {
+    bottom: calc(100% + 0.65rem);
+    top: auto;
+    right: 0;
   }
 
+  /* Mobile Vernier Scale */
   .stage-ruler {
-    right: 0.35rem;
-    gap: 0.35rem;
+    right: 0.5rem;
+    top: 42%;
   }
 
-  .ruler-line-track,
-  .ruler-milestones {
-    height: 165px;
+  .vernier-scale-wrap {
+    width: 72px;
+    height: 180px;
   }
 
-  .ruler-node {
-    padding: 0.45rem 0.6rem;
+  .vernier-svg {
+    height: 180px;
   }
 
   .ruler-year {
-    display: none;
-  }
-
-  .ruler-dot {
-    width: 4px;
-    height: 4px;
-  }
-
-  .ruler-node.active .ruler-dot {
-    transform: scale(1.5);
+    font-size: 0.625rem;
+    margin-right: 22px;
   }
 
   .artifacts-grid {
@@ -1702,33 +1517,38 @@ button {
   }
 
   .soundtrack-row {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-    padding: 1.5rem 0.5rem;
-    overflow-wrap: break-word;
+    grid-template-columns: 1fr auto;
+    gap: 0.45rem 1rem;
+    padding: 1.4rem 0.5rem;
   }
 
-  .track-tag-col {
-    grid-column: 1 / -1;
+  .track-year {
+    grid-column: 1 / 2;
+    font-size: 0.875rem;
   }
 
-  .track-critique {
-    grid-column: 1 / -1;
-    padding-left: 0;
+  .track-audio-ctrl {
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+    align-self: center;
+  }
+
+  .track-title-group {
+    grid-column: 1 / 2;
     padding-right: 0;
   }
 
-  .track-audio-status {
+  .track-film {
     grid-column: 1 / -1;
-    grid-row: auto;
-    justify-self: start;
-    margin-top: 0.25rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.6rem;
+    padding-right: 0;
+    margin-top: 0.15rem;
   }
 
-  .footer-bottom-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.5rem;
+  .track-critique {
+    display: none;
   }
 }
 
@@ -1741,7 +1561,7 @@ button {
   }
 
   .hero-centerpiece {
-    padding: 1.75rem 0;
+    padding: 1.5rem 0;
   }
 }
 
@@ -1755,7 +1575,8 @@ button {
 
   .scroll-pin,
   .skyfall-rain,
-  .soundtrack-row.is-playing .audio-pulse-dot {
+  .soundtrack-row.is-playing .eq-bar,
+  .master-audio-control.is-sound-standby .sound-toggle-btn {
     animation: none !important;
   }
 
@@ -1765,11 +1586,11 @@ button {
     transition: none !important;
   }
 
-  .act-backdrop,
-  .hud-archive-stamp,
-  .hud-coords,
-  .ruler-progress-fill,
-  .ruler-dot,
+  .gain-meter-wrap,
+  .vernier-major-tick,
+  .ruler-year,
+  .dossier-popover,
+  .crosshair-svg,
   .soundtrack-row:hover .track-title-group {
     transition: none !important;
     transform: none !important;
