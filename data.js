@@ -20,9 +20,7 @@ const SITE_DATA = {
       brandCode: "007 // CRAIG ERA",
       brandSub: "MI6 ARCHIVAL DOSSIER",
       langToggleZh: "中文",
-      langToggleEn: "EN",
-      settingsTitle: "TMDB API 配置",
-      statusBadge: "LEVEL-9 // EYES ONLY"
+      langToggleEn: "EN"
     },
 
     hero: {
@@ -70,38 +68,18 @@ const SITE_DATA = {
       agentDossier: "AGENT: JAMES BOND // DESIGNATION: 007 // ERA: 2006–2021 // STATUS: RETIRED",
       jurisdiction: "HER MAJESTY'S SECRET INTELLIGENCE SERVICE // SECTION ARCHIVE // LONDON SE1",
       disclaimer: "本网站为非盈利独立艺术画册，致敬丹尼尔·克雷格 15 年间对詹姆斯·邦德传奇的重塑与贡献。无商业用途。",
-      backToTop: "↑ BACK TO TOP / 返回顶部"
-    },
-
-    toast: {
-      settingsReady: "军情六处终端：TMDB 剧照同步协议已就绪"
-    },
-
-    tmdbModal: {
-      badge: "MI6 TERMINAL // TMDB UPLINK",
-      title: "TMDB 剧照卫星通信协议",
-      description: "配置 The Movie Database (TMDB) API Key 以自动同步五部曲宽银幕高清剧照至光圈舞台。密钥仅存储于本地浏览器缓存，绝不上报服务器。",
-      inputLabel: "TMDB API KEY (V3) 或 READ ACCESS TOKEN (V4)",
-      inputPlaceholder: "输入您的 TMDB API Key (如 32位十六进制字符串)...",
-      saveBtn: "保存并同步剧照 // SAVE & SYNC",
-      clearBtn: "清除配置 // CLEAR",
-      closeBtn: "关闭终端 // CLOSE",
-      statusEmpty: "未配置密钥：当前使用离线电影感渐变渲染（全功能正常）",
-      statusLoading: "正在加密连接 TMDB 卫星服务器并拉取五部曲高清剧照...",
-      statusSuccess: "通信成功：五部曲高清宽银幕剧照已全量载入光圈舞台",
-      statusError: "密钥验证失败或网络超时，已自动无缝切换为离线电影底色",
-      statusCleared: "本地密钥已清除，恢复离线渲染模式"
+      backToTop: "BACK TO TOP / 返回顶部"
     },
 
     // ------------------------------------------
-    // 五部曲完整元数据 (预埋 tmdbId, 坐标, 配色, 弧光评述)
+    // 五部曲完整元数据 (预埋 localBackdrop, 坐标, 配色, 弧光评述)
     // ------------------------------------------
     films: [
       {
         id: "casino-royale",
         order: "01",
         year: 2006,
-        tmdbId: 36557,
+        localBackdrop: "assets/act-1.webp",
         theme: "ORIGIN",
         themeZh: "破茧 · 执刃者",
         title: "Casino Royale",
@@ -113,9 +91,9 @@ const SITE_DATA = {
           geo: "45.4404° N, 12.3160° E"
         },
         palette: {
-          primary: "#181411",
-          accent: "#B88E52",
-          overlay: "rgba(184, 142, 82, 0.08)"
+          primary: "#0A0F16",
+          accent: "#8FA8BE",
+          overlay: "rgba(143, 168, 190, 0.08)"
         },
         themeSong: {
           title: "You Know My Name",
@@ -131,7 +109,7 @@ const SITE_DATA = {
         id: "quantum-of-solace",
         order: "02",
         year: 2008,
-        tmdbId: 10764,
+        localBackdrop: "assets/act-2.webp",
         theme: "VENDETTA",
         themeZh: "复仇 · 焦土",
         title: "Quantum of Solace",
@@ -143,9 +121,9 @@ const SITE_DATA = {
           geo: "24.6272° S, 69.3179° W"
         },
         palette: {
-          primary: "#1B1713",
-          accent: "#9E7244",
-          overlay: "rgba(158, 114, 68, 0.08)"
+          primary: "#16110C",
+          accent: "#B88B58",
+          overlay: "rgba(184, 139, 88, 0.08)"
         },
         themeSong: {
           title: "Another Way to Die",
@@ -161,7 +139,7 @@ const SITE_DATA = {
         id: "skyfall",
         order: "03",
         year: 2012,
-        tmdbId: 37724,
+        localBackdrop: "assets/act-3.webp",
         theme: "LEGACY",
         themeZh: "遗泽 · 天幕",
         title: "Skyfall",
@@ -173,9 +151,9 @@ const SITE_DATA = {
           geo: "56.6639° N, 5.0567° W"
         },
         palette: {
-          primary: "#111417",
-          accent: "#6B7C8C",
-          overlay: "rgba(107, 124, 140, 0.08)"
+          primary: "#101214",
+          accent: "#9BA3AB",
+          overlay: "rgba(155, 163, 171, 0.08)"
         },
         themeSong: {
           title: "Skyfall",
@@ -191,7 +169,7 @@ const SITE_DATA = {
         id: "spectre",
         order: "04",
         year: 2015,
-        tmdbId: 206647,
+        localBackdrop: "assets/act-4.webp",
         theme: "SHADOW",
         themeZh: "暗影 · 罗网",
         title: "Spectre",
@@ -203,9 +181,9 @@ const SITE_DATA = {
           geo: "19.4326° N, 99.1332° W"
         },
         palette: {
-          primary: "#141217",
-          accent: "#8C7B92",
-          overlay: "rgba(140, 123, 146, 0.08)"
+          primary: "#0D0C09",
+          accent: "#B59B6A",
+          overlay: "rgba(181, 155, 106, 0.08)"
         },
         themeSong: {
           title: "Writing's on the Wall",
@@ -221,7 +199,7 @@ const SITE_DATA = {
         id: "no-time-to-die",
         order: "05",
         year: 2021,
-        tmdbId: 370172,
+        localBackdrop: "assets/act-5.webp",
         theme: "SACRIFICE",
         themeZh: "向死 · 永恒",
         title: "No Time to Die",
@@ -233,9 +211,9 @@ const SITE_DATA = {
           geo: "40.6664° N, 16.6043° E"
         },
         palette: {
-          primary: "#171412",
-          accent: "#A2846E",
-          overlay: "rgba(162, 132, 110, 0.08)"
+          primary: "#091012",
+          accent: "#7D9B8F",
+          overlay: "rgba(125, 155, 143, 0.08)"
         },
         themeSong: {
           title: "No Time to Die",
@@ -297,6 +275,7 @@ const SITE_DATA = {
         artist: "Chris Cornell",
         film: "Casino Royale",
         filmZh: "大战皇家赌场",
+        audioSrc: "assets/theme-1.mp3",
         tag: "RAW RESURRECTION // 血性重生",
         critique: "粗砺狂暴的硬摇滚重击，彻底粉碎了过去的从容老派，宣告一个肉身会流血、骨骼会碎裂的全新 007 破茧而生。"
       },
@@ -306,6 +285,7 @@ const SITE_DATA = {
         artist: "Jack White & Alicia Keys",
         film: "Quantum of Solace",
         filmZh: "大破量子危机",
+        audioSrc: "assets/theme-2.mp3",
         tag: "FRACTURED SOUL // 裂帛之声",
         critique: "失真躁动的吉他轮击与尖锐管乐的厮杀，宛如特工在未熄的复仇熔炉中分崩离析的精神残像。"
       },
@@ -315,6 +295,7 @@ const SITE_DATA = {
         artist: "Adele",
         film: "Skyfall",
         filmZh: "大破天幕杀机",
+        audioSrc: "assets/theme-3.mp3",
         tag: "SYMPHONIC ELEGY // 帝国挽歌",
         critique: "如天鹅绒般深沉的铜管与悲怆弦乐，与哀婉高贵的声线交织成一曲献给大英帝国旧时代残晖的壮丽挽歌。"
       },
@@ -324,6 +305,7 @@ const SITE_DATA = {
         artist: "Sam Smith",
         film: "Spectre",
         filmZh: "幽灵党",
+        audioSrc: "assets/theme-4.mp3",
         tag: "SHADOW FALSETTO // 幽灵假音",
         critique: "脆弱而戏剧化的高音盘旋在宏大管弦乐之上，剥开坚硬的外壳，展露被命运提线木偶师步步紧逼时的孤寂战栗。"
       },
@@ -333,6 +315,7 @@ const SITE_DATA = {
         artist: "Billie Eilish & Finneas (Orch. Hans Zimmer)",
         film: "No Time to Die",
         filmZh: "无暇赴死",
+        audioSrc: "assets/theme-5.mp3",
         tag: "MORTAL REQUIEM // 永恒安魂",
         critique: "近乎私语的沉寂逐渐汇入汉斯·季默如惊涛骇浪般的交响浪潮中，为这位奉献出所有的英雄献上最后的告别安魂曲。"
       }
@@ -352,9 +335,7 @@ const SITE_DATA = {
       brandCode: "007 // CRAIG ERA",
       brandSub: "MI6 ARCHIVAL DOSSIER",
       langToggleZh: "中文",
-      langToggleEn: "EN",
-      settingsTitle: "TMDB API Configuration",
-      statusBadge: "LEVEL-9 // EYES ONLY"
+      langToggleEn: "EN"
     },
 
     hero: {
@@ -402,38 +383,18 @@ const SITE_DATA = {
       agentDossier: "AGENT: JAMES BOND // DESIGNATION: 007 // ERA: 2006–2021 // STATUS: RETIRED",
       jurisdiction: "HER MAJESTY'S SECRET INTELLIGENCE SERVICE // SECTION ARCHIVE // LONDON SE1",
       disclaimer: "Non-commercial independent visual tribute commemorating Daniel Craig's transformative 15-year portrayal of James Bond.",
-      backToTop: "↑ BACK TO TOP"
-    },
-
-    toast: {
-      settingsReady: "MI6 Terminal: TMDB Telemetry Protocol Standby"
-    },
-
-    tmdbModal: {
-      badge: "MI6 TERMINAL // TMDB UPLINK",
-      title: "TMDB SATELLITE TELEMETRY CONFIGURATION",
-      description: "Provide a The Movie Database (TMDB) API Key (v3) or Read Access Token (v4) to stream widescreen cinematography into the aperture stage. Credentials remain strictly client-side.",
-      inputLabel: "TMDB API KEY (V3) OR READ ACCESS TOKEN (V4)",
-      inputPlaceholder: "Enter your TMDB API Key (e.g. 32-character hex key)...",
-      saveBtn: "SAVE & SYNC BACKDROPS",
-      clearBtn: "CLEAR CREDENTIALS",
-      closeBtn: "CLOSE TERMINAL",
-      statusEmpty: "No key configured: Displaying offline filmic atmospheric gradients.",
-      statusLoading: "Synchronizing with TMDB satellite servers for 5-film HD backdrops...",
-      statusSuccess: "Uplink verified: 5-film widescreen backdrops synced into aperture.",
-      statusError: "Authentication failed or network timed out. Fallback active.",
-      statusCleared: "Credentials cleared. Reverted to offline filmic mode."
+      backToTop: "BACK TO TOP"
     },
 
     // ------------------------------------------
-    // 5 Films Full Metadata (tmdbId, coords, palette, arc)
+    // 5 Films Full Metadata (localBackdrop, coords, palette, arc)
     // ------------------------------------------
     films: [
       {
         id: "casino-royale",
         order: "01",
         year: 2006,
-        tmdbId: 36557,
+        localBackdrop: "assets/act-1.webp",
         theme: "ORIGIN",
         themeZh: "ORIGIN",
         title: "Casino Royale",
@@ -445,9 +406,9 @@ const SITE_DATA = {
           geo: "45.4404° N, 12.3160° E"
         },
         palette: {
-          primary: "#181411",
-          accent: "#B88E52",
-          overlay: "rgba(184, 142, 82, 0.08)"
+          primary: "#0A0F16",
+          accent: "#8FA8BE",
+          overlay: "rgba(143, 168, 190, 0.08)"
         },
         themeSong: {
           title: "You Know My Name",
@@ -463,7 +424,7 @@ const SITE_DATA = {
         id: "quantum-of-solace",
         order: "02",
         year: 2008,
-        tmdbId: 10764,
+        localBackdrop: "assets/act-2.webp",
         theme: "VENDETTA",
         themeZh: "VENDETTA",
         title: "Quantum of Solace",
@@ -475,9 +436,9 @@ const SITE_DATA = {
           geo: "24.6272° S, 69.3179° W"
         },
         palette: {
-          primary: "#1B1713",
-          accent: "#9E7244",
-          overlay: "rgba(158, 114, 68, 0.08)"
+          primary: "#16110C",
+          accent: "#B88B58",
+          overlay: "rgba(184, 139, 88, 0.08)"
         },
         themeSong: {
           title: "Another Way to Die",
@@ -493,7 +454,7 @@ const SITE_DATA = {
         id: "skyfall",
         order: "03",
         year: 2012,
-        tmdbId: 37724,
+        localBackdrop: "assets/act-3.webp",
         theme: "LEGACY",
         themeZh: "LEGACY",
         title: "Skyfall",
@@ -505,9 +466,9 @@ const SITE_DATA = {
           geo: "56.6639° N, 5.0567° W"
         },
         palette: {
-          primary: "#111417",
-          accent: "#6B7C8C",
-          overlay: "rgba(107, 124, 140, 0.08)"
+          primary: "#101214",
+          accent: "#9BA3AB",
+          overlay: "rgba(155, 163, 171, 0.08)"
         },
         themeSong: {
           title: "Skyfall",
@@ -523,7 +484,7 @@ const SITE_DATA = {
         id: "spectre",
         order: "04",
         year: 2015,
-        tmdbId: 206647,
+        localBackdrop: "assets/act-4.webp",
         theme: "SHADOW",
         themeZh: "SHADOW",
         title: "Spectre",
@@ -535,9 +496,9 @@ const SITE_DATA = {
           geo: "19.4326° N, 99.1332° W"
         },
         palette: {
-          primary: "#141217",
-          accent: "#8C7B92",
-          overlay: "rgba(140, 123, 146, 0.08)"
+          primary: "#0D0C09",
+          accent: "#B59B6A",
+          overlay: "rgba(181, 155, 106, 0.08)"
         },
         themeSong: {
           title: "Writing's on the Wall",
@@ -553,7 +514,7 @@ const SITE_DATA = {
         id: "no-time-to-die",
         order: "05",
         year: 2021,
-        tmdbId: 370172,
+        localBackdrop: "assets/act-5.webp",
         theme: "SACRIFICE",
         themeZh: "SACRIFICE",
         title: "No Time to Die",
@@ -565,9 +526,9 @@ const SITE_DATA = {
           geo: "40.6664° N, 16.6043° E"
         },
         palette: {
-          primary: "#171412",
-          accent: "#A2846E",
-          overlay: "rgba(162, 132, 110, 0.08)"
+          primary: "#091012",
+          accent: "#7D9B8F",
+          overlay: "rgba(125, 155, 143, 0.08)"
         },
         themeSong: {
           title: "No Time to Die",
@@ -629,6 +590,7 @@ const SITE_DATA = {
         artist: "Chris Cornell",
         film: "Casino Royale",
         filmZh: "Casino Royale",
+        audioSrc: "assets/theme-1.mp3",
         tag: "RAW RESURRECTION",
         critique: "Brash, muscular hard-rock overture shattering the orchestral complacency of the franchise, introducing a 007 who bleeds."
       },
@@ -638,6 +600,7 @@ const SITE_DATA = {
         artist: "Jack White & Alicia Keys",
         film: "Quantum of Solace",
         filmZh: "Quantum of Solace",
+        audioSrc: "assets/theme-2.mp3",
         tag: "FRACTURED SOUL",
         critique: "Aggressive fuzz guitar duel and tempestuous brass harmonies mirroring an agent unraveling in the furnace of unvented revenge."
       },
@@ -647,6 +610,7 @@ const SITE_DATA = {
         artist: "Adele",
         film: "Skyfall",
         filmZh: "Skyfall",
+        audioSrc: "assets/theme-3.mp3",
         tag: "SYMPHONIC ELEGY",
         critique: "Velvet brass, mournful strings, and a somber, brooding vocal delivery celebrating the mortal vulnerability and ancient dignity of MI6."
       },
@@ -656,6 +620,7 @@ const SITE_DATA = {
         artist: "Sam Smith",
         film: "Spectre",
         filmZh: "Spectre",
+        audioSrc: "assets/theme-4.mp3",
         tag: "SHADOW FALSETTO",
         critique: "Fragile, operatic falsetto drifting over cinematic sweeps, exposing an operative stripped bare by the omnipresent puppet master."
       },
@@ -665,6 +630,7 @@ const SITE_DATA = {
         artist: "Billie Eilish & Finneas (Orch. Hans Zimmer)",
         film: "No Time to Die",
         filmZh: "No Time to Die",
+        audioSrc: "assets/theme-5.mp3",
         tag: "MORTAL REQUIEM",
         critique: "Haunting, whispered restraint swelling into a devastating symphonic crescendo, bidding farewell to the hero who gave everything."
       }

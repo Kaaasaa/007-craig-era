@@ -1,12 +1,12 @@
 /**
  * MI6 DECLASSIFIED ARCHIVE // DANIEL CRAIG 007 ERA (2006-2021)
- * Application Layer, Gun Barrel Aperture Scrollytelling & TMDB Satellite Telemetry Engine
+ * Application Layer, Gun Barrel Aperture Scrollytelling & Local Archival Backdrop Engine
  * 
  * Features:
- * 1. Precision Gun Barrel Aperture: clip-path circle viewport + rotating spiral rifling SVG
+ * 1. Precision Gun Barrel Aperture: optical spotlight mask + rotating spiral rifling SVG
  * 2. 5-Act one-shot timeline with mechanical rotational damping and full-screen aperture climax
- * 3. TMDB API integration: pulls 5 HD widescreen backdrops (w1280) with client-side storage & zero-error fallback
- * 4. Bilingual hot-swap engine: in-place updates for HUD, titles, subtitles, and TMDB modal
+ * 3. Local static widescreen backdrops (assets/act-1.webp .. act-5.webp) with CSS gradient fallback
+ * 4. Bilingual hot-swap engine: in-place updates for HUD, titles, subtitles, and archival sections
  * 5. Timeline ruler navigation with click-to-jump smooth scrolling
  */
 
@@ -17,21 +17,44 @@
   // 1. STATE & CONSTANTS
   // ==========================================
   const STORAGE_KEY_LANG = 'bond_archive_lang';
-  const STORAGE_KEY_TMDB = 'bond_tmdb_api_key';
   const DEFAULT_LANG = 'zh';
 
   // Scrub progress targets for each of the 5 acts (0.0 to 1.0)
-  const ACT_PROGRESS_TARGETS = [0.04, 0.26, 0.50, 0.73, 0.93];
+  const ACT_PROGRESS_TARGETS = [0.04, 0.27, 0.49, 0.71, 0.90];
+
+  // Fallback atmospheric linear gradients layered underneath local static backdrops
+  const ACT_FALLBACK_GRADIENTS = [
+    'linear-gradient(160deg, rgba(19, 31, 46, 0.96) 0%, rgba(10, 15, 22, 0.98) 55%, #06090D 100%)',
+    'linear-gradient(160deg, rgba(44, 30, 18, 0.96) 0%, rgba(22, 16, 11, 0.98) 55%, #0D0A07 100%)',
+    'linear-gradient(160deg, rgba(28, 30, 33, 0.96) 0%, rgba(16, 18, 20, 0.98) 55%, #090A0B 100%)',
+    'linear-gradient(160deg, rgba(28, 23, 15, 0.96) 0%, rgba(13, 11, 9, 0.98) 55%, #070605 100%)',
+    'linear-gradient(160deg, rgba(15, 28, 26, 0.96) 0%, rgba(9, 16, 18, 0.98) 55%, #05090A 100%)'
+  ];
+
+  const prefersReducedMotion = Boolean(
+    typeof window !== 'undefined' &&
+    window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 
   let currentLang = DEFAULT_LANG;
   let currentActIndex = 0;
-  let toastTimeoutId = null;
   let oneShotTimeline = null;
-  let tmdbApiKey = '';
+  let lastWindowWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
+  let resizeTimerId = null;
   let artifactsRevealed = false;
   let soundtracksRevealed = false;
   let artifactsObserver = null;
   let soundtracksObserver = null;
+
+  // Single global audio preview instance (Zero native <audio controls>)
+  const globalAudio = typeof Audio !== 'undefined' ? new Audio() : null;
+  if (globalAudio) {
+    globalAudio.preload = 'none';
+  }
+  let activeTrackIndex = -1;
+  let isAudioPlaying = false;
+  let audioProgressPct = 0;
 
   // Verify that SITE_DATA is loaded
   const siteData = typeof SITE_DATA !== 'undefined' ? SITE_DATA : (window.SITE_DATA || globalThis.SITE_DATA);
@@ -50,10 +73,8 @@
     // Nav
     navBrandCode: document.getElementById('nav-brand-code'),
     navBrandSub: document.getElementById('nav-brand-sub'),
-    navStatusBadge: document.getElementById('nav-status-badge'),
     langBtnEn: document.getElementById('lang-btn-en'),
     langBtnZh: document.getElementById('lang-btn-zh'),
-    settingsBtn: document.getElementById('api-settings-btn'),
 
     // Hero / Prologue
     heroArchiveHeader: document.getElementById('hero-archive-header'),
@@ -93,22 +114,6 @@
     rulerProgressFill: document.getElementById('ruler-progress-fill'),
     rulerNodes: document.querySelectorAll('.ruler-node'),
 
-    // TMDB Settings Modal
-    tmdbModal: document.getElementById('tmdb-modal'),
-    tmdbModalCloseBtn: document.getElementById('tmdb-modal-close-btn'),
-    tmdbModalBadge: document.getElementById('tmdb-modal-badge'),
-    tmdbModalTitle: document.getElementById('tmdb-modal-title'),
-    tmdbModalDesc: document.getElementById('tmdb-modal-desc'),
-    tmdbForm: document.getElementById('tmdb-form'),
-    tmdbInputLabel: document.getElementById('tmdb-input-label'),
-    tmdbApiKeyInput: document.getElementById('tmdb-api-key-input'),
-    toggleKeyVisibility: document.getElementById('toggle-key-visibility'),
-    tmdbStatusDot: document.getElementById('tmdb-status-dot'),
-    tmdbStatusBox: document.getElementById('tmdb-status-box'),
-    tmdbStatusMsg: document.getElementById('tmdb-status-msg'),
-    tmdbSaveBtn: document.getElementById('tmdb-save-btn'),
-    tmdbClearBtn: document.getElementById('tmdb-clear-btn'),
-
     // Artifacts Section
     artifactsSectionIdx: document.getElementById('artifacts-section-idx'),
     artifactsSectionCat: document.getElementById('artifacts-section-cat'),
@@ -128,11 +133,7 @@
     footerJurisdiction: document.getElementById('footer-jurisdiction'),
     footerDisclaimer: document.getElementById('footer-disclaimer'),
     footerBackToTop: document.getElementById('footer-back-to-top'),
-    backToTopBtn: document.getElementById('back-to-top'),
-
-    // Toast
-    toast: document.getElementById('mi6-toast'),
-    toastText: document.getElementById('toast-text')
+    backToTopBtn: document.getElementById('back-to-top')
   };
 
   // ==========================================
@@ -153,8 +154,6 @@
     // Top Navigation
     if (DOM.navBrandCode) DOM.navBrandCode.textContent = data.nav.brandCode;
     if (DOM.navBrandSub) DOM.navBrandSub.textContent = data.nav.brandSub;
-    if (DOM.navStatusBadge) DOM.navStatusBadge.textContent = data.nav.statusBadge;
-    if (DOM.settingsBtn) DOM.settingsBtn.setAttribute('title', data.nav.settingsTitle);
 
     // Hero Section
     if (DOM.heroArchiveHeader) DOM.heroArchiveHeader.textContent = data.hero.archiveHeader;
@@ -225,6 +224,10 @@
     const data = siteData[lang];
     if (!data || !data.films || !data.films[actIndex]) return;
 
+    if (DOM.oneShotStage) {
+      DOM.oneShotStage.setAttribute('data-act', String(actIndex));
+    }
+
     const film = data.films[actIndex];
     const displayTheme = lang === 'zh' ? (film.themeZh || film.theme) : film.theme;
     const displayQuote = lang === 'zh' ? film.quoteZh : film.quote;
@@ -257,48 +260,6 @@
     }
     if (DOM.hudCommentary) {
       DOM.hudCommentary.textContent = displayCommentary;
-    }
-  }
-
-  /**
-   * Update TMDB Settings Modal Text
-   * @param {string} lang - 'zh' | 'en'
-   */
-  function updateModalText(lang) {
-    const data = siteData[lang];
-    if (!data || !data.tmdbModal) return;
-    const m = data.tmdbModal;
-
-    if (DOM.tmdbModalBadge) DOM.tmdbModalBadge.textContent = m.badge;
-    if (DOM.tmdbModalTitle) DOM.tmdbModalTitle.textContent = m.title;
-    if (DOM.tmdbModalDesc) DOM.tmdbModalDesc.textContent = m.description;
-    if (DOM.tmdbInputLabel) DOM.tmdbInputLabel.textContent = m.inputLabel;
-    if (DOM.tmdbApiKeyInput) DOM.tmdbApiKeyInput.setAttribute('placeholder', m.inputPlaceholder);
-    if (DOM.tmdbSaveBtn) DOM.tmdbSaveBtn.textContent = m.saveBtn;
-    if (DOM.tmdbClearBtn) DOM.tmdbClearBtn.textContent = m.clearBtn;
-    if (DOM.tmdbModalCloseBtn) DOM.tmdbModalCloseBtn.setAttribute('title', m.closeBtn);
-
-    // Refresh status text
-    if (!tmdbApiKey) {
-      setModalStatus(m.statusEmpty, 'empty');
-    }
-  }
-
-  /**
-   * Set TMDB modal status message and indicator
-   * @param {string} message 
-   * @param {'empty' | 'loading' | 'success' | 'error'} state 
-   */
-  function setModalStatus(message, state) {
-    if (!DOM.tmdbStatusMsg || !DOM.tmdbStatusBox || !DOM.tmdbStatusDot) return;
-
-    DOM.tmdbStatusMsg.textContent = message;
-    DOM.tmdbStatusBox.className = `modal-status-box ${state}`;
-
-    if (state === 'success') {
-      DOM.tmdbStatusDot.className = 'modal-status-dot active';
-    } else {
-      DOM.tmdbStatusDot.className = 'modal-status-dot';
     }
   }
 
@@ -349,16 +310,28 @@
         <span>${escapeHTML(headers.film)}</span>
         <span>${escapeHTML(headers.tag)}</span>
         <span>${escapeHTML(headers.critique)}</span>
+        <span></span>
       </div>
     `;
 
     const revealClass = soundtracksRevealed ? 'reveal-item is-revealed' : 'reveal-item';
 
-    const rowsHtml = soundtracks.map(track => {
+    const rowsHtml = soundtracks.map((track, idx) => {
       const displayFilm = lang === 'zh' ? track.filmZh : track.film;
+      const isRowPlaying = isAudioPlaying && idx === activeTrackIndex;
+      const playingClass = isRowPlaying ? 'is-playing' : '';
+      const statusLabel = getAudioStatusLabel(isRowPlaying, lang);
+      const progressWidth = isRowPlaying ? audioProgressPct : 0;
 
       return `
-        <div class="soundtrack-row ${revealClass}" data-year="${track.year}">
+        <div class="soundtrack-row ${revealClass} ${playingClass}"
+             data-year="${track.year}"
+             data-track-index="${idx}"
+             data-audio-src="${escapeHTML(track.audioSrc || '')}"
+             role="button"
+             tabindex="0"
+             aria-pressed="${isRowPlaying ? 'true' : 'false'}"
+             aria-label="${escapeHTML(track.track)} — ${escapeHTML(statusLabel)}">
           <div class="track-year">${track.year}</div>
           <div class="track-title-group">
             <div class="track-name">"${escapeHTML(track.track)}"</div>
@@ -372,6 +345,13 @@
             <span class="track-tag">${escapeHTML(track.tag)}</span>
           </div>
           <div class="track-critique">${escapeHTML(track.critique)}</div>
+          <div class="track-audio-status">
+            <span class="audio-pulse-dot" aria-hidden="true"></span>
+            <span class="audio-status-label">${escapeHTML(statusLabel)}</span>
+          </div>
+          <div class="track-progress-bar" aria-hidden="true">
+            <div class="track-progress-fill" style="width: ${progressWidth.toFixed(2)}%;"></div>
+          </div>
         </div>
       `;
     }).join('');
@@ -384,7 +364,7 @@
    * Staggers entrance with 0.08s delays upon entering viewport
    */
   function initScrollReveals() {
-    if (!('IntersectionObserver' in window)) {
+    if (prefersReducedMotion || !('IntersectionObserver' in window)) {
       artifactsRevealed = true;
       soundtracksRevealed = true;
       document.querySelectorAll('.reveal-item').forEach(el => el.classList.add('is-revealed'));
@@ -433,91 +413,183 @@
   }
 
   // ==========================================
-  // 4. TMDB SATELLITE TELEMETRY (API FETCHER)
+  // 3B. MINIMALIST SONIC LEGACY AUDIO PLAYER
   // ==========================================
 
   /**
-   * Fetch and apply 5-film HD widescreen backdrops from TMDB
-   * Supports v3 API Key and v4 Read Access Bearer Token
-   * @param {string} key - API Key or Bearer Token
+   * Localized playback label for soundtrack rows
+   * @param {boolean} playing
+   * @param {string} lang
+   * @returns {string}
    */
-  async function fetchAndApplyTmdbBackdrops(key) {
-    const data = siteData[currentLang];
-    const m = data ? data.tmdbModal : {};
+  function getAudioStatusLabel(playing, lang) {
+    if (playing) {
+      return lang === 'zh' ? '❚❚ 播放中' : '❚❚ PLAYING';
+    }
+    return lang === 'zh' ? '▶ 试听' : '▶ LISTEN';
+  }
 
-    if (!key || typeof key !== 'string' || key.trim().length < 10) {
-      setModalStatus(m.statusEmpty || 'No key configured.', 'empty');
+  /**
+   * Synchronize .is-playing state, status labels, and progress bars across all soundtrack rows
+   * @param {boolean} resetAllProgress - whether to reset all progress bar widths to 0%
+   */
+  function syncAudioRowsUI(resetAllProgress = false) {
+    if (!DOM.soundtracksContainer) return;
+    const rows = DOM.soundtracksContainer.querySelectorAll('.soundtrack-row');
+
+    rows.forEach((row) => {
+      const idx = parseInt(row.getAttribute('data-track-index'), 10);
+      const isRowPlaying = isAudioPlaying && idx === activeTrackIndex;
+
+      row.classList.toggle('is-playing', isRowPlaying);
+      row.setAttribute('aria-pressed', isRowPlaying ? 'true' : 'false');
+
+      const labelEl = row.querySelector('.audio-status-label');
+      if (labelEl) {
+        labelEl.textContent = getAudioStatusLabel(isRowPlaying, currentLang);
+      }
+
+      if (resetAllProgress || idx !== activeTrackIndex) {
+        const fillEl = row.querySelector('.track-progress-fill');
+        if (fillEl) fillEl.style.width = '0%';
+      }
+    });
+  }
+
+  /**
+   * Toggle play/pause or switch to another soundtrack row via single global Audio instance
+   * @param {HTMLElement} row
+   */
+  function handleTrackRowToggle(row) {
+    if (!row || !globalAudio) return;
+
+    const idx = parseInt(row.getAttribute('data-track-index'), 10);
+    const src = row.getAttribute('data-audio-src');
+    if (isNaN(idx) || !src) return;
+
+    // Clicking currently playing row -> pause
+    if (idx === activeTrackIndex && isAudioPlaying) {
+      globalAudio.pause();
+      isAudioPlaying = false;
+      syncAudioRowsUI(false);
       return;
     }
 
-    const cleanKey = key.trim();
-    setModalStatus(m.statusLoading || 'Connecting to TMDB...', 'loading');
-
-    const isBearer = cleanKey.startsWith('eyJ') || cleanKey.length > 50;
-    const films = siteData.zh.films; // canonical 5 films with tmdbId
-
-    let successCount = 0;
-
-    for (const film of films) {
-      const backdropEls = document.querySelectorAll(`.act-backdrop[data-tmdb-id="${film.tmdbId}"]`);
-      if (!backdropEls || backdropEls.length === 0) continue;
-
-      try {
-        const url = isBearer
-          ? `https://api.themoviedb.org/3/movie/${film.tmdbId}`
-          : `https://api.themoviedb.org/3/movie/${film.tmdbId}?api_key=${cleanKey}`;
-
-        const headers = isBearer
-          ? { Authorization: `Bearer ${cleanKey}`, accept: 'application/json' }
-          : { accept: 'application/json' };
-
-        const response = await fetch(url, { headers });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const movieData = await response.json();
-        if (movieData.backdrop_path) {
-          const imgUrl = `https://image.tmdb.org/t/p/w1280${movieData.backdrop_path}`;
-
-          // Preload image to ensure smooth fade
-          const img = new Image();
-          img.onload = () => {
-            backdropEls.forEach(el => {
-              el.style.backgroundImage = `url("${imgUrl}")`;
-              el.classList.add('loaded');
-            });
-          };
-          img.src = imgUrl;
-
-          successCount++;
-        }
-      } catch (err) {
-        console.warn(`[MI6 ARCHIVE TMDB] Failed fetching backdrop for ${film.title} (${film.tmdbId}):`, err.message);
+    // Clicking paused active row -> resume
+    if (idx === activeTrackIndex && !isAudioPlaying) {
+      isAudioPlaying = true;
+      syncAudioRowsUI(false);
+      const playPromise = globalAudio.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch((err) => {
+          if (err && err.name !== 'AbortError') {
+            isAudioPlaying = false;
+            syncAudioRowsUI(false);
+          }
+        });
       }
+      return;
     }
 
-    if (successCount > 0) {
-      setModalStatus(m.statusSuccess || 'Backdrops synchronized successfully.', 'success');
-      showToast(currentLang === 'zh' ? '五部曲高清剧照已载入光学舞台' : '5-Film HD Backdrops Synchronized');
-    } else {
-      setModalStatus(m.statusError || 'Failed to authenticate key or network timeout.', 'error');
+    // Clicking a different row -> smooth switch (reset previous progress, load & play new src)
+    globalAudio.pause();
+    audioProgressPct = 0;
+    activeTrackIndex = idx;
+    isAudioPlaying = true;
+    globalAudio.src = src;
+    globalAudio.currentTime = 0;
+    syncAudioRowsUI(true);
+
+    const playPromise = globalAudio.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch((err) => {
+        if (err && err.name !== 'AbortError') {
+          isAudioPlaying = false;
+          activeTrackIndex = -1;
+          audioProgressPct = 0;
+          syncAudioRowsUI(true);
+        }
+      });
     }
   }
 
   /**
-   * Clear all TMDB backdrops and restore offline ambient gradients
+   * Bind event delegation and single global Audio lifecycle listeners
    */
-  function clearTmdbBackdrops() {
-    const allBackdrops = document.querySelectorAll('.act-backdrop');
-    allBackdrops.forEach(el => {
-      el.style.backgroundImage = '';
-      el.classList.remove('loaded');
+  function initAudioPlayer() {
+    if (DOM.soundtracksContainer) {
+      DOM.soundtracksContainer.addEventListener('click', (e) => {
+        const row = e.target && e.target.closest ? e.target.closest('.soundtrack-row') : null;
+        if (row) handleTrackRowToggle(row);
+      });
+
+      DOM.soundtracksContainer.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          const row = e.target && e.target.closest ? e.target.closest('.soundtrack-row') : null;
+          if (row) {
+            e.preventDefault();
+            handleTrackRowToggle(row);
+          }
+        }
+      });
+    }
+
+    if (!globalAudio) return;
+
+    globalAudio.addEventListener('timeupdate', () => {
+      if (!isAudioPlaying || activeTrackIndex < 0 || !DOM.soundtracksContainer) return;
+      if (globalAudio.duration > 0 && isFinite(globalAudio.duration)) {
+        audioProgressPct = Math.min(100, Math.max(0, (globalAudio.currentTime / globalAudio.duration) * 100));
+        const activeRow = DOM.soundtracksContainer.querySelector(`.soundtrack-row[data-track-index="${activeTrackIndex}"]`);
+        const fillEl = activeRow ? activeRow.querySelector('.track-progress-fill') : null;
+        if (fillEl) {
+          fillEl.style.width = `${audioProgressPct.toFixed(2)}%`;
+        }
+      }
     });
 
-    const data = siteData[currentLang];
-    const m = data ? data.tmdbModal : {};
-    setModalStatus(m.statusCleared || 'Credentials cleared.', 'empty');
+    globalAudio.addEventListener('ended', () => {
+      isAudioPlaying = false;
+      activeTrackIndex = -1;
+      audioProgressPct = 0;
+      globalAudio.currentTime = 0;
+      syncAudioRowsUI(true);
+    });
+
+    globalAudio.addEventListener('error', () => {
+      isAudioPlaying = false;
+      activeTrackIndex = -1;
+      audioProgressPct = 0;
+      syncAudioRowsUI(true);
+    });
+  }
+
+  // ==========================================
+  // 4. LOCAL STATIC BACKDROP INJECTION
+  // ==========================================
+
+  /**
+   * Apply local static widescreen backdrops (localBackdrop) with CSS dark gradient fallbacks
+   */
+  function applyLocalBackdrops() {
+    const films = siteData.zh && siteData.zh.films;
+    if (!Array.isArray(films) || !DOM.actBgs) return;
+
+    films.forEach((film, index) => {
+      const actBg = DOM.actBgs[index];
+      if (!actBg) return;
+
+      const targetEl = actBg.querySelector('.act-backdrop') || actBg;
+      const fallback = ACT_FALLBACK_GRADIENTS[index] || 'linear-gradient(180deg, #111111 0%, #090909 100%)';
+
+      if (film.localBackdrop) {
+        targetEl.style.backgroundImage = `url("${film.localBackdrop}"), ${fallback}`;
+      } else {
+        targetEl.style.backgroundImage = fallback;
+      }
+      targetEl.style.backgroundSize = 'cover';
+      targetEl.style.backgroundPosition = '50% 22%';
+    });
   }
 
   // ==========================================
@@ -540,6 +612,9 @@
     }
 
     gsap.registerPlugin(ScrollTrigger);
+    if (typeof ScrollTrigger.config === 'function') {
+      ScrollTrigger.config({ ignoreMobileResize: true });
+    }
     if (typeof ScrollToPlugin !== 'undefined') {
       gsap.registerPlugin(ScrollToPlugin);
     }
@@ -578,9 +653,8 @@
 
     giantTitles.forEach((node, i) => {
       gsap.set(node, {
-        opacity: i === 0 ? 0.14 : 0,
-        y: i === 0 ? 0 : 30,
-        visibility: i === 0 ? 'visible' : 'hidden'
+        autoAlpha: i === 0 ? 0.15 : 0,
+        y: i === 0 ? 0 : (prefersReducedMotion ? 0 : 24)
       });
     });
 
@@ -600,18 +674,18 @@
       gsap.set(hudSubtitlesContent, { opacity: 1, y: 0 });
     }
 
-    // Set initial HUD content for Casino Royale
+    // Set initial HUD content & chapter chromatic accent for Casino Royale
     setHudContent(0, currentLang);
 
-    // Build master timeline with scrub: 1.2 and +=450%
+    // Build master timeline with responsive scrub and +=420% scroll budget
     oneShotTimeline = gsap.timeline({
       scrollTrigger: {
         id: 'oneShotScrolly',
         trigger: stage,
         start: 'top top',
-        end: '+=450%',
+        end: '+=420%',
         pin: true,
-        scrub: 1.2,
+        scrub: prefersReducedMotion ? 0.15 : 0.65,
         anticipatePin: 1,
         onUpdate: (self) => {
           handleScrollProgress(self.progress);
@@ -619,114 +693,96 @@
       }
     });
 
+    const kenBurnsScale = prefersReducedMotion ? 1.0 : 1.07;
+    const finalScale = prefersReducedMotion ? 1.0 : 1.10;
+    const rotorAngle = (deg) => (prefersReducedMotion ? 0 : deg);
+    const titleShiftY = (px) => (prefersReducedMotion ? 0 : px);
+
     // Time budget: 0 to 10
-    // Act 0 -> Act 1: 1.4 to 2.4 (Casino Royale -> Quantum of Solace)
+    // Giant titles fade out completely BEFORE the next title fades in (zero overlap)
+    // Subtitle swap thresholds align strictly inside each fade trough:
+    // T0->1: [1.35..1.85] (swap at 0.175)
+    // T1->2: [3.55..4.05] (swap at 0.395)
+    // T2->3: [5.75..6.25] (swap at 0.615)
+    // T3->4: [7.75..8.25] (swap at 0.815)
     oneShotTimeline
-      // Rifling spiral rotation
-      .to(riflingRotor, { rotation: 28, duration: 2.4, ease: 'none' }, 0)
-      .to(giantTitles[0], { y: -30, duration: 1.4, ease: 'none' }, 0)
-      .to(actBackdrops[0], { scale: 1.08, duration: 2.0, ease: 'none' }, 0)
+      // Act 0: Casino Royale (0.0 -> 2.4)
+      .to(riflingRotor, { rotation: rotorAngle(28), duration: 2.4, ease: 'none' }, 0)
+      .to(giantTitles[0], { y: titleShiftY(-20), duration: 1.35, ease: 'none' }, 0)
+      .to(actBackdrops[0], { scale: kenBurnsScale, duration: 2.0, ease: 'none' }, 0)
 
-      // Transition 0 -> 1: Layered Cross-Cover (actBgs[1] z-index:2 fades in over actBgs[0] z-index:1)
-      .to(giantTitles[0], {
-        opacity: 0,
-        y: -50,
-        duration: 0.7,
-        ease: 'power2.in',
-        onComplete: () => { gsap.set(giantTitles[0], { visibility: 'hidden' }); }
-      }, 1.4)
+      // Transition 0 -> 1: Casino Royale -> Quantum of Solace
+      .to(giantTitles[0], { autoAlpha: 0, y: titleShiftY(-36), duration: 0.4, ease: 'power2.in' }, 1.35)
       .to(actBgs[1], { opacity: 1, duration: 1.0, ease: 'power2.inOut' }, 1.4)
-      .to(hudSubtitlesContent, { opacity: 0, y: -8, duration: 0.45, ease: 'power2.in' }, 1.35)
-      .set(giantTitles[1], { visibility: 'visible' }, 1.8)
-      .to(giantTitles[1], { opacity: 0.14, y: 0, duration: 0.7, ease: 'power2.out' }, 1.8)
-      .to(hudSubtitlesContent, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 1.85)
+      .to(hudSubtitlesContent, { opacity: 0, y: titleShiftY(-6), duration: 0.38, ease: 'power2.in' }, 1.35)
+      .to(giantTitles[1], { autoAlpha: 0.15, y: 0, duration: 0.55, ease: 'power2.out' }, 1.85)
+      .to(hudSubtitlesContent, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' }, 1.85)
 
-      // Act 1 -> Act 2: 3.6 to 4.6 (Quantum of Solace -> Skyfall)
-      .to(riflingRotor, { rotation: 62, duration: 2.2, ease: 'none' }, 2.4)
-      .to(giantTitles[1], { y: -30, duration: 1.2, ease: 'none' }, 2.4)
-      .to(actBackdrops[1], { scale: 1.08, duration: 2.0, ease: 'none' }, 2.4)
+      // Act 1: Quantum of Solace (2.4 -> 4.6)
+      .to(riflingRotor, { rotation: rotorAngle(62), duration: 2.2, ease: 'none' }, 2.4)
+      .to(giantTitles[1], { y: titleShiftY(-20), duration: 1.15, ease: 'none' }, 2.4)
+      .to(actBackdrops[1], { scale: kenBurnsScale, duration: 2.0, ease: 'none' }, 2.4)
 
-      // Transition 1 -> 2: Layered Cross-Cover (actBgs[2] z-index:3 fades in over actBgs[1] z-index:2)
-      .to(giantTitles[1], {
-        opacity: 0,
-        y: -50,
-        duration: 0.7,
-        ease: 'power2.in',
-        onComplete: () => { gsap.set(giantTitles[1], { visibility: 'hidden' }); }
-      }, 3.6)
+      // Transition 1 -> 2: Quantum of Solace -> Skyfall
+      .to(giantTitles[1], { autoAlpha: 0, y: titleShiftY(-36), duration: 0.4, ease: 'power2.in' }, 3.55)
       .to(actBgs[2], { opacity: 1, duration: 1.0, ease: 'power2.inOut' }, 3.6)
-      .to(skyfallRain, { opacity: 0.38, duration: 0.8, ease: 'power2.out' }, 3.8)
-      .to(hudSubtitlesContent, { opacity: 0, y: -8, duration: 0.45, ease: 'power2.in' }, 3.55)
-      .set(giantTitles[2], { visibility: 'visible' }, 4.0)
-      .to(giantTitles[2], { opacity: 0.14, y: 0, duration: 0.7, ease: 'power2.out' }, 4.0)
-      .to(hudSubtitlesContent, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 4.05)
+      .to(skyfallRain, { opacity: prefersReducedMotion ? 0 : 0.24, duration: 1.0, ease: 'power2.out' }, 3.8)
+      .to(hudSubtitlesContent, { opacity: 0, y: titleShiftY(-6), duration: 0.38, ease: 'power2.in' }, 3.55)
+      .to(giantTitles[2], { autoAlpha: 0.15, y: 0, duration: 0.55, ease: 'power2.out' }, 4.05)
+      .to(hudSubtitlesContent, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' }, 4.05)
 
-      // Act 2 -> Act 3: 5.8 to 6.8 (Skyfall -> Spectre)
-      .to(riflingRotor, { rotation: 92, duration: 2.2, ease: 'none' }, 4.6)
-      .to(giantTitles[2], { y: -30, duration: 1.2, ease: 'none' }, 4.6)
-      .to(actBackdrops[2], { scale: 1.08, duration: 2.0, ease: 'none' }, 4.6)
+      // Act 2: Skyfall (4.6 -> 6.8)
+      .to(riflingRotor, { rotation: rotorAngle(92), duration: 2.2, ease: 'none' }, 4.6)
+      .to(giantTitles[2], { y: titleShiftY(-20), duration: 1.15, ease: 'none' }, 4.6)
+      .to(actBackdrops[2], { scale: kenBurnsScale, duration: 2.0, ease: 'none' }, 4.6)
 
-      // Transition 2 -> 3: Layered Cross-Cover (actBgs[3] z-index:4 fades in over actBgs[2] z-index:3)
+      // Transition 2 -> 3: Skyfall -> Spectre
       .to(skyfallRain, { opacity: 0, duration: 0.8, ease: 'power2.in' }, 5.8)
-      .to(giantTitles[2], {
-        opacity: 0,
-        y: -50,
-        duration: 0.7,
-        ease: 'power2.in',
-        onComplete: () => { gsap.set(giantTitles[2], { visibility: 'hidden' }); }
-      }, 5.8)
+      .to(giantTitles[2], { autoAlpha: 0, y: titleShiftY(-36), duration: 0.4, ease: 'power2.in' }, 5.75)
       .to(actBgs[3], { opacity: 1, duration: 1.0, ease: 'power2.inOut' }, 5.8)
-      .to(hudSubtitlesContent, { opacity: 0, y: -8, duration: 0.45, ease: 'power2.in' }, 5.75)
-      .set(giantTitles[3], { visibility: 'visible' }, 6.2)
-      .to(giantTitles[3], { opacity: 0.14, y: 0, duration: 0.7, ease: 'power2.out' }, 6.2)
-      .to(hudSubtitlesContent, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 6.25)
+      .to(hudSubtitlesContent, { opacity: 0, y: titleShiftY(-6), duration: 0.38, ease: 'power2.in' }, 5.75)
+      .to(giantTitles[3], { autoAlpha: 0.15, y: 0, duration: 0.55, ease: 'power2.out' }, 6.25)
+      .to(hudSubtitlesContent, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' }, 6.25)
 
-      // Act 3 -> Act 4: 7.8 to 8.8 (Spectre -> No Time to Die)
-      .to(riflingRotor, { rotation: 114, duration: 2.0, ease: 'none' }, 6.8)
-      .to(giantTitles[3], { y: -30, duration: 1.2, ease: 'none' }, 6.8)
-      .to(actBackdrops[3], { scale: 1.08, duration: 2.0, ease: 'none' }, 6.8)
+      // Act 3: Spectre (6.8 -> 8.8)
+      .to(riflingRotor, { rotation: rotorAngle(114), duration: 2.0, ease: 'none' }, 6.8)
+      .to(giantTitles[3], { y: titleShiftY(-20), duration: 0.95, ease: 'none' }, 6.8)
+      .to(actBackdrops[3], { scale: kenBurnsScale, duration: 2.0, ease: 'none' }, 6.8)
 
-      // Transition 3 -> 4: Layered Cross-Cover (actBgs[4] z-index:5 fades in over actBgs[3] z-index:4)
-      .to(giantTitles[3], {
-        opacity: 0,
-        y: -50,
-        duration: 0.7,
-        ease: 'power2.in',
-        onComplete: () => { gsap.set(giantTitles[3], { visibility: 'hidden' }); }
-      }, 7.8)
+      // Transition 3 -> 4: Spectre -> No Time to Die
+      .to(giantTitles[3], { autoAlpha: 0, y: titleShiftY(-36), duration: 0.4, ease: 'power2.in' }, 7.75)
       .to(actBgs[4], { opacity: 1, duration: 1.0, ease: 'power2.inOut' }, 7.8)
-      .to(hudSubtitlesContent, { opacity: 0, y: -8, duration: 0.45, ease: 'power2.in' }, 7.75)
-      .set(giantTitles[4], { visibility: 'visible' }, 8.2)
-      .to(giantTitles[4], { opacity: 0.14, y: 0, duration: 0.7, ease: 'power2.out' }, 8.2)
-      .to(hudSubtitlesContent, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 8.25)
+      .to(hudSubtitlesContent, { opacity: 0, y: titleShiftY(-6), duration: 0.38, ease: 'power2.in' }, 7.75)
+      .to(giantTitles[4], { autoAlpha: 0.15, y: 0, duration: 0.55, ease: 'power2.out' }, 8.25)
+      .to(hudSubtitlesContent, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' }, 8.25)
 
-      // Parallax on Giant Title 4
-      .to(giantTitles[4], { y: -25, duration: 1.0, ease: 'none' }, 8.5)
-      .to(actBackdrops[4], { scale: 1.10, duration: 1.5, ease: 'none' }, 8.5)
+      // Parallax on Giant Title 4 & Final Backdrop
+      .to(giantTitles[4], { y: titleShiftY(-16), duration: 0.65, ease: 'none' }, 8.8)
+      .to(actBackdrops[4], { scale: finalScale, duration: 1.5, ease: 'none' }, 8.5)
 
-      // Final 20% Climax & Optical Spotlight Curtain Reveal (8.4 to 10.0):
-      // Zero clip-path, mask and rifling smoothly fade out to reveal full-screen backdrop
-      .to(riflingRotor, { rotation: 135, duration: 1.6, ease: 'power2.out' }, 8.4)
+      // Final Climax & Optical Aperture Curtain Reveal (8.6 to 10.0):
+      // Mask and rifling smoothly open while keeping Act 5 title visible at 0.90 and fading out softly at the end
+      .to(riflingRotor, { rotation: rotorAngle(135), duration: 1.4, ease: 'power2.out' }, 8.6)
       .to(spotlightMask, {
         opacity: 0,
-        scale: 1.35,
-        duration: 1.6,
-        ease: 'power2.inOut'
-      }, 8.4)
-      .to(riflingContainer, {
-        opacity: 0,
-        scale: 1.15,
-        duration: 1.2,
+        scale: prefersReducedMotion ? 1.0 : 1.32,
+        duration: 1.4,
         ease: 'power2.inOut'
       }, 8.6)
-      .to(giantTitles[4], { opacity: 0, duration: 1.0, ease: 'power2.inOut' }, 8.6)
-      .to(hudSubtitlesContent, { opacity: 0.35, y: -4, duration: 1.2, ease: 'power2.inOut' }, 8.8);
+      .to(riflingContainer, {
+        opacity: 0,
+        scale: prefersReducedMotion ? 1.0 : 1.12,
+        duration: 1.1,
+        ease: 'power2.inOut'
+      }, 8.75)
+      .to(giantTitles[4], { autoAlpha: 0, duration: 0.55, ease: 'power2.inOut' }, 9.45);
 
     console.info('[MI6 ARCHIVE] Gun Barrel Aperture One-Shot Sequence mounted successfully.');
   }
 
   /**
    * Deterministic scrub handler: updates HUD text and timeline ruler
+   * Thresholds align strictly with the opacity-0 midpoint of each subtitle fade
    * @param {number} progress - 0.0 to 1.0
    */
   function handleScrollProgress(progress) {
@@ -734,15 +790,15 @@
       DOM.rulerProgressFill.style.height = `${Math.min(100, Math.max(0, progress * 100))}%`;
     }
 
-    // Determine current active act index
+    // Determine current active act index inside subtitle fade trough
     let newActIndex = 0;
-    if (progress < 0.20) {
+    if (progress < 0.175) {
       newActIndex = 0;
-    } else if (progress < 0.42) {
+    } else if (progress < 0.395) {
       newActIndex = 1;
-    } else if (progress < 0.64) {
+    } else if (progress < 0.615) {
       newActIndex = 2;
-    } else if (progress < 0.85) {
+    } else if (progress < 0.815) {
       newActIndex = 3;
     } else {
       newActIndex = 4;
@@ -808,112 +864,29 @@
     // 5. Update Current Viewfinder HUD & Subtitles
     setHudContent(currentActIndex, currentLang);
 
-    // 6. Update TMDB Modal Copy
-    updateModalText(currentLang);
-
-    // 7. Render Artifacts Grid & Soundtrack
+    // 6. Render Artifacts Grid & Soundtrack
     renderArtifactsGrid(data.artifacts, currentLang);
     renderSoundtrackCatalog(data.soundtracks, data.soundtracksSection, currentLang);
     initScrollReveals();
   }
 
   // ==========================================
-  // 7. TERMINAL HUD TOAST SYSTEM
-  // ==========================================
-
-  /**
-   * Display declassified HUD toast notification
-   * @param {string} message - text to display
-   */
-  function showToast(message) {
-    if (!DOM.toast || !DOM.toastText) return;
-
-    if (toastTimeoutId) {
-      clearTimeout(toastTimeoutId);
-    }
-
-    DOM.toastText.textContent = message;
-    DOM.toast.classList.add('show');
-
-    toastTimeoutId = setTimeout(() => {
-      DOM.toast.classList.remove('show');
-    }, 3400);
-  }
-
-  // ==========================================
-  // 8. EVENT BINDINGS
+  // 7. EVENT BINDINGS
   // ==========================================
   function setupEvents() {
     // Language Switch Buttons
     if (DOM.langBtnZh) DOM.langBtnZh.addEventListener('click', () => setLanguage('zh'));
     if (DOM.langBtnEn) DOM.langBtnEn.addEventListener('click', () => setLanguage('en'));
 
-    // Settings Button -> Open TMDB Modal
-    if (DOM.settingsBtn) {
-      DOM.settingsBtn.addEventListener('click', () => {
-        openTmdbModal();
-      });
-    }
-
-    // Close Modal Button
-    if (DOM.tmdbModalCloseBtn) {
-      DOM.tmdbModalCloseBtn.addEventListener('click', () => {
-        closeTmdbModal();
-      });
-    }
-
-    // Click Outside Modal Card to Close
-    if (DOM.tmdbModal) {
-      DOM.tmdbModal.addEventListener('click', (e) => {
-        if (e.target === DOM.tmdbModal) {
-          closeTmdbModal();
-        }
-      });
-    }
-
-    // Toggle API Key Input Masking
-    if (DOM.toggleKeyVisibility && DOM.tmdbApiKeyInput) {
-      DOM.toggleKeyVisibility.addEventListener('click', () => {
-        const isPassword = DOM.tmdbApiKeyInput.getAttribute('type') === 'password';
-        DOM.tmdbApiKeyInput.setAttribute('type', isPassword ? 'text' : 'password');
-      });
-    }
-
-    // Save TMDB Key & Trigger Sync
-    if (DOM.tmdbSaveBtn) {
-      DOM.tmdbSaveBtn.addEventListener('click', () => {
-        const val = DOM.tmdbApiKeyInput ? DOM.tmdbApiKeyInput.value.trim() : '';
-        if (val) {
-          tmdbApiKey = val;
-          try {
-            localStorage.setItem(STORAGE_KEY_TMDB, val);
-          } catch (e) {}
-          fetchAndApplyTmdbBackdrops(val);
-        } else {
-          clearTmdbBackdrops();
-        }
-      });
-    }
-
-    // Clear TMDB Key
-    if (DOM.tmdbClearBtn) {
-      DOM.tmdbClearBtn.addEventListener('click', () => {
-        tmdbApiKey = '';
-        if (DOM.tmdbApiKeyInput) DOM.tmdbApiKeyInput.value = '';
-        try {
-          localStorage.removeItem(STORAGE_KEY_TMDB);
-        } catch (e) {}
-        clearTmdbBackdrops();
-      });
-    }
-
     // Return to Top
     if (DOM.backToTopBtn) {
       DOM.backToTopBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        if (typeof gsap !== 'undefined' && gsap.plugins && gsap.plugins.scrollTo) {
+        if (prefersReducedMotion) {
+          window.scrollTo(0, 0);
+        } else if (typeof gsap !== 'undefined' && gsap.plugins && gsap.plugins.scrollTo) {
           gsap.to(window, {
-            duration: 1.4,
+            duration: 1.25,
             scrollTo: 0,
             ease: 'power3.inOut'
           });
@@ -938,9 +911,11 @@
           const targetProgress = ACT_PROGRESS_TARGETS[actIdx];
           const targetScroll = st.start + targetProgress * (st.end - st.start);
 
-          if (typeof gsap !== 'undefined' && gsap.plugins && gsap.plugins.scrollTo) {
+          if (prefersReducedMotion) {
+            window.scrollTo(0, targetScroll);
+          } else if (typeof gsap !== 'undefined' && gsap.plugins && gsap.plugins.scrollTo) {
             gsap.to(window, {
-              duration: 1.3,
+              duration: 1.15,
               scrollTo: targetScroll,
               ease: 'power2.inOut'
             });
@@ -954,43 +929,29 @@
       });
     }
 
-    // Keyboard Access: Alt + L for language, ESC for modal
+    // Keyboard Access: Alt + L for language switch
     window.addEventListener('keydown', (e) => {
       if (e.altKey && (e.key === 'l' || e.key === 'L')) {
         setLanguage(currentLang === 'zh' ? 'en' : 'zh');
       }
-      if ((e.key === 'Escape' || e.key === 'Esc') && DOM.tmdbModal && DOM.tmdbModal.classList.contains('open')) {
-        closeTmdbModal();
-      }
     });
 
-    // Window Resize Handler with ScrollTrigger Refresh
+    // Debounced Width-Aware Resize Handler (prevents mobile Safari address bar resize jitter)
     window.addEventListener('resize', () => {
-      if (typeof ScrollTrigger !== 'undefined') {
-        ScrollTrigger.refresh();
-      }
+      const currentWidth = window.innerWidth;
+      if (currentWidth === lastWindowWidth) return;
+      lastWindowWidth = currentWidth;
+      if (resizeTimerId) clearTimeout(resizeTimerId);
+      resizeTimerId = setTimeout(() => {
+        if (typeof ScrollTrigger !== 'undefined') {
+          ScrollTrigger.refresh();
+        }
+      }, 200);
     });
-  }
-
-  function openTmdbModal() {
-    if (!DOM.tmdbModal) return;
-    DOM.tmdbModal.classList.add('open');
-    DOM.tmdbModal.setAttribute('aria-hidden', 'false');
-    if (DOM.tmdbApiKeyInput) {
-      DOM.tmdbApiKeyInput.value = tmdbApiKey;
-      DOM.tmdbApiKeyInput.focus();
-    }
-    updateModalText(currentLang);
-  }
-
-  function closeTmdbModal() {
-    if (!DOM.tmdbModal) return;
-    DOM.tmdbModal.classList.remove('open');
-    DOM.tmdbModal.setAttribute('aria-hidden', 'true');
   }
 
   // ==========================================
-  // 9. UTILITIES
+  // 8. UTILITIES
   // ==========================================
   function escapeHTML(str) {
     if (!str || typeof str !== 'string') return '';
@@ -1003,18 +964,14 @@
   }
 
   // ==========================================
-  // 10. INITIALIZATION
+  // 9. INITIALIZATION
   // ==========================================
   function init() {
-    // 1. Read cached preferences
+    // 1. Read cached language preference
     try {
       const cachedLang = localStorage.getItem(STORAGE_KEY_LANG);
       if (cachedLang === 'zh' || cachedLang === 'en') {
         currentLang = cachedLang;
-      }
-      const cachedKey = localStorage.getItem(STORAGE_KEY_TMDB);
-      if (cachedKey) {
-        tmdbApiKey = cachedKey.trim();
       }
     } catch (e) {
       currentLang = DEFAULT_LANG;
@@ -1039,21 +996,20 @@
     // 4. Render Static Text & Headers
     renderStaticText(data);
 
-    // 5. Initialize Giant Titles
+    // 5. Initialize Giant Titles & Local Static Backdrops
     updateGiantTitles(currentLang);
+    applyLocalBackdrops();
 
     // 6. Initialize HUD Data for Act 0
     setHudContent(0, currentLang);
 
-    // 7. Update Modal Copy
-    updateModalText(currentLang);
-
-    // 8. Render Lower Sections & Setup Micro-Interactions
+    // 7. Render Lower Sections & Setup Micro-Interactions + Audio Player
     renderArtifactsGrid(data.artifacts, currentLang);
     renderSoundtrackCatalog(data.soundtracks, data.soundtracksSection, currentLang);
     initScrollReveals();
+    initAudioPlayer();
 
-    // 9. Mount Gun Barrel Aperture Sequence
+    // 8. Mount Gun Barrel Aperture Sequence
     if (document.readyState === 'complete') {
       initGunBarrelScrollytelling();
     } else {
@@ -1062,12 +1018,7 @@
       });
     }
 
-    // 10. Auto-trigger TMDB fetch if Key exists
-    if (tmdbApiKey) {
-      fetchAndApplyTmdbBackdrops(tmdbApiKey);
-    }
-
-    console.info(`[MI6 ARCHIVE INITIALIZED] Daniel Craig 007 Dossier // Language: ${currentLang.toUpperCase()} // Gun Barrel Aperture Active.`);
+    console.info(`[MI6 ARCHIVE INITIALIZED] Daniel Craig 007 Dossier // Language: ${currentLang.toUpperCase()} // Local Archival Backdrops Active.`);
   }
 
   // Run on DOM ready

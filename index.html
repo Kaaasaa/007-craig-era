@@ -29,7 +29,7 @@
     <div class="nav-inner">
       <div class="nav-brand">
         <a href="#hero" class="brand-link" aria-label="MI6 Dossier Home">
-          <span class="brand-sigil">007</span>
+          <span class="brand-sigil">MI6</span>
           <span class="brand-divider">/</span>
           <span class="brand-code" id="nav-brand-code">007 // CRAIG ERA</span>
         </a>
@@ -43,15 +43,6 @@
           <span class="lang-sep" aria-hidden="true">/</span>
           <button type="button" class="lang-btn active" data-lang="zh" id="lang-btn-zh" aria-label="切换至中文">中文</button>
         </div>
-
-        <!-- TMDB API Configuration Modal Trigger (Phase 3 Integration Target) -->
-        <button type="button" class="settings-btn" id="api-settings-btn" title="TMDB API Configuration (Phase 3)" aria-label="TMDB Configuration">
-          <svg class="settings-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-          <span class="settings-status" id="nav-status-badge">LEVEL-9</span>
-        </button>
       </div>
     </div>
   </header>
@@ -109,24 +100,24 @@
       <div class="stage-layer stage-backdrops" id="stage-backdrops" aria-hidden="true">
         <div class="act-bg act-bg-1 active" data-act-index="0">
           <div class="act-ambient-gradient bg-casino"></div>
-          <div class="act-backdrop" data-tmdb-id="36557"></div>
+          <div class="act-backdrop"></div>
         </div>
         <div class="act-bg act-bg-2" data-act-index="1">
           <div class="act-ambient-gradient bg-quantum"></div>
-          <div class="act-backdrop" data-tmdb-id="10764"></div>
+          <div class="act-backdrop"></div>
         </div>
         <div class="act-bg act-bg-3" data-act-index="2">
           <div class="act-ambient-gradient bg-skyfall"></div>
           <div class="skyfall-rain" aria-hidden="true"></div>
-          <div class="act-backdrop" data-tmdb-id="37724"></div>
+          <div class="act-backdrop"></div>
         </div>
         <div class="act-bg act-bg-4" data-act-index="3">
           <div class="act-ambient-gradient bg-spectre"></div>
-          <div class="act-backdrop" data-tmdb-id="206647"></div>
+          <div class="act-backdrop"></div>
         </div>
         <div class="act-bg act-bg-5" data-act-index="4">
           <div class="act-ambient-gradient bg-notimetodie"></div>
-          <div class="act-backdrop" data-tmdb-id="370172"></div>
+          <div class="act-backdrop"></div>
         </div>
       </div>
 
@@ -159,48 +150,43 @@
         </div>
       </div>
 
-      <!-- Layer 3: Precision Rifling SVG Overlay (Mechanical Rotational Damping, z-index: 3) -->
+      <!-- Layer 4: Precision Optical Lens & Rifling SVG Overlay (z-index: 8) -->
       <div class="stage-layer stage-rifling-layer" aria-hidden="true">
         <div class="rifling-container" id="rifling-container">
-          <svg class="gun-barrel-rifling-svg" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Gun Barrel Spiral Rifling">
+          <svg class="gun-barrel-rifling-svg" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Gun Barrel Optical Aperture">
             <!-- Rotating Mechanical Rifling Blades -->
             <g id="rifling-rotor" transform-origin="500 500">
-              <!-- 16 Precision Spiral Rifling Blades -->
-              <path d="M 500,240 C 620,240 760,320 860,450" stroke="rgba(234, 230, 223, 0.22)" stroke-width="1.25" stroke-dasharray="4 2" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(22.5 500 500)" stroke="rgba(234, 230, 223, 0.18)" stroke-width="1" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(45 500 500)" stroke="rgba(234, 230, 223, 0.22)" stroke-width="1.25" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(67.5 500 500)" stroke="rgba(234, 230, 223, 0.18)" stroke-width="1" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(90 500 500)" stroke="rgba(234, 230, 223, 0.22)" stroke-width="1.25" stroke-dasharray="4 2" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(112.5 500 500)" stroke="rgba(234, 230, 223, 0.18)" stroke-width="1" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(135 500 500)" stroke="rgba(234, 230, 223, 0.22)" stroke-width="1.25" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(157.5 500 500)" stroke="rgba(234, 230, 223, 0.18)" stroke-width="1" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(180 500 500)" stroke="rgba(234, 230, 223, 0.22)" stroke-width="1.25" stroke-dasharray="4 2" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(202.5 500 500)" stroke="rgba(234, 230, 223, 0.18)" stroke-width="1" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(225 500 500)" stroke="rgba(234, 230, 223, 0.22)" stroke-width="1.25" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(247.5 500 500)" stroke="rgba(234, 230, 223, 0.18)" stroke-width="1" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(270 500 500)" stroke="rgba(234, 230, 223, 0.22)" stroke-width="1.25" stroke-dasharray="4 2" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(292.5 500 500)" stroke="rgba(234, 230, 223, 0.18)" stroke-width="1" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(315 500 500)" stroke="rgba(234, 230, 223, 0.22)" stroke-width="1.25" />
-              <path d="M 500,240 C 620,240 760,320 860,450" transform="rotate(337.5 500 500)" stroke="rgba(234, 230, 223, 0.18)" stroke-width="1" />
+              <!-- 16 Precision Spiral Rifling Hairlines -->
+              <path d="M 500,248 C 622,248 758,325 858,452" stroke="rgba(234, 230, 223, 0.14)" stroke-width="0.9" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(22.5 500 500)" stroke="rgba(234, 230, 223, 0.08)" stroke-width="0.65" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(45 500 500)" stroke="rgba(234, 230, 223, 0.14)" stroke-width="0.9" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(67.5 500 500)" stroke="rgba(234, 230, 223, 0.08)" stroke-width="0.65" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(90 500 500)" stroke="rgba(234, 230, 223, 0.14)" stroke-width="0.9" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(112.5 500 500)" stroke="rgba(234, 230, 223, 0.08)" stroke-width="0.65" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(135 500 500)" stroke="rgba(234, 230, 223, 0.14)" stroke-width="0.9" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(157.5 500 500)" stroke="rgba(234, 230, 223, 0.08)" stroke-width="0.65" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(180 500 500)" stroke="rgba(234, 230, 223, 0.14)" stroke-width="0.9" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(202.5 500 500)" stroke="rgba(234, 230, 223, 0.08)" stroke-width="0.65" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(225 500 500)" stroke="rgba(234, 230, 223, 0.14)" stroke-width="0.9" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(247.5 500 500)" stroke="rgba(234, 230, 223, 0.08)" stroke-width="0.65" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(270 500 500)" stroke="rgba(234, 230, 223, 0.14)" stroke-width="0.9" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(292.5 500 500)" stroke="rgba(234, 230, 223, 0.08)" stroke-width="0.65" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(315 500 500)" stroke="rgba(234, 230, 223, 0.14)" stroke-width="0.9" />
+              <path d="M 500,248 C 622,248 758,325 858,452" transform="rotate(337.5 500 500)" stroke="rgba(234, 230, 223, 0.08)" stroke-width="0.65" />
 
-              <!-- Concentric Calibration & Degree Scales -->
-              <circle cx="500" cy="500" r="240" stroke="rgba(234, 230, 223, 0.28)" stroke-width="1.5" stroke-dasharray="8 6" />
-              <circle cx="500" cy="500" r="340" stroke="rgba(234, 230, 223, 0.16)" stroke-width="1" />
-              <circle cx="500" cy="500" r="440" stroke="rgba(234, 230, 223, 0.14)" stroke-width="1" stroke-dasharray="3 9" />
-              <circle cx="500" cy="500" r="480" stroke="rgba(234, 230, 223, 0.20)" stroke-width="1.25" />
+              <!-- Concentric Optical Calibration Rings -->
+              <circle cx="500" cy="500" r="248" stroke="rgba(234, 230, 223, 0.22)" stroke-width="0.85" />
+              <circle cx="500" cy="500" r="345" stroke="rgba(234, 230, 223, 0.1)" stroke-width="0.6" />
+              <circle cx="500" cy="500" r="442" stroke="rgba(234, 230, 223, 0.12)" stroke-width="0.75" stroke-dasharray="1 11" />
+              <circle cx="500" cy="500" r="482" stroke="rgba(234, 230, 223, 0.12)" stroke-width="0.65" />
             </g>
 
-            <!-- Fixed Static Optical Reticle & Telemetry Markings -->
-            <g class="rifling-reticle" stroke="rgba(197, 194, 188, 0.35)" stroke-width="0.8">
-              <!-- Precision Crosshair Center Ticks -->
-              <line x1="500" y1="210" x2="500" y2="230" />
-              <line x1="500" y1="770" x2="500" y2="790" />
-              <line x1="210" y1="500" x2="230" y2="500" />
-              <line x1="770" y1="500" x2="790" y2="500" />
-
-              <!-- Micro Crosshairs at Quadrants -->
-              <text x="500" y="200" fill="rgba(197, 194, 188, 0.45)" font-family="monospace" font-size="9" text-anchor="middle" letter-spacing="2">007 // APERTURE</text>
-              <text x="500" y="815" fill="rgba(197, 194, 188, 0.45)" font-family="monospace" font-size="9" text-anchor="middle" letter-spacing="2">CAL. 7.65MM</text>
+            <!-- Fixed Optical Reference Ticks -->
+            <g class="rifling-reticle" stroke="rgba(197, 194, 188, 0.24)" stroke-width="0.7">
+              <line x1="500" y1="224" x2="500" y2="238" />
+              <line x1="500" y1="762" x2="500" y2="776" />
+              <line x1="224" y1="500" x2="238" y2="500" />
+              <line x1="762" y1="500" x2="776" y2="500" />
             </g>
           </svg>
         </div>
@@ -342,71 +328,6 @@
       </div>
     </div>
   </footer>
-
-  <!-- TMDB API Configuration Modal (Phase 3 Integration) -->
-  <div class="tmdb-modal-backdrop" id="tmdb-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="tmdb-modal-title">
-    <div class="tmdb-modal-card">
-      <div class="modal-header">
-        <div class="modal-badge-group">
-          <span class="modal-badge" id="tmdb-modal-badge">MI6 TERMINAL // TMDB UPLINK</span>
-          <span class="modal-status-dot" id="tmdb-status-dot" aria-hidden="true"></span>
-        </div>
-        <button type="button" class="modal-close-btn" id="tmdb-modal-close-btn" aria-label="Close modal">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-
-      <h3 class="modal-title" id="tmdb-modal-title">TMDB 剧照卫星通信协议</h3>
-      <p class="modal-desc" id="tmdb-modal-desc">
-        配置 The Movie Database (TMDB) API Key 以自动同步五部曲宽银幕高清剧照至光圈舞台。密钥仅存储于本地浏览器缓存，绝不上报服务器。
-      </p>
-
-      <form class="modal-form" id="tmdb-form" onsubmit="return false;">
-        <label for="tmdb-api-key-input" class="modal-label" id="tmdb-input-label">
-          TMDB API KEY (V3) 或 READ ACCESS TOKEN (V4)
-        </label>
-        <div class="modal-input-wrapper">
-          <input 
-            type="password" 
-            id="tmdb-api-key-input" 
-            class="modal-input" 
-            placeholder="输入您的 TMDB API Key..." 
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <button type="button" class="toggle-key-visibility" id="toggle-key-visibility" aria-label="Toggle key visibility">
-            <svg class="eye-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-          </button>
-        </div>
-
-        <div class="modal-status-box" id="tmdb-status-box">
-          <span class="status-indicator-icon">■</span>
-          <span class="status-msg" id="tmdb-status-msg">未配置密钥：当前使用离线电影感渐变渲染（全功能正常）</span>
-        </div>
-
-        <div class="modal-actions">
-          <button type="submit" class="modal-btn modal-btn-primary" id="tmdb-save-btn">
-            保存并同步剧照 // SAVE & SYNC
-          </button>
-          <button type="button" class="modal-btn modal-btn-secondary" id="tmdb-clear-btn">
-            清除配置 // CLEAR
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Subtle MI6 HUD / Terminal Toast Feedback -->
-  <div class="mi6-toast" id="mi6-toast" role="status" aria-live="polite">
-    <span class="toast-indicator">■</span>
-    <span class="toast-text" id="toast-text"></span>
-  </div>
 
   <!-- GSAP 3 & ScrollTrigger Libraries via CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
