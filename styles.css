@@ -965,8 +965,16 @@ button {
 }
 
 /* ==========================================================================
-   8. Q-BRANCH & TAILORING GRID (SWISS 2x2 ARCHITECTURE)
+   8. Q-BRANCH & TAILORING: INTERACTIVE DARKROOM EXHIBITION
    ========================================================================== */
+.darkroom-section {
+  background-color: #09090b;
+}
+
+.section-header--minimal {
+  margin-bottom: clamp(3rem, 5.5vw, 4.5rem);
+}
+
 .reveal-item {
   opacity: 0;
   transform: translateY(16px);
@@ -978,101 +986,496 @@ button {
   transform: translateY(0);
 }
 
-.artifacts-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  border-top: var(--hairline);
-  border-bottom: var(--hairline);
+/* Asymmetric Two-Row Luxury Darkroom Gallery */
+.darkroom-gallery {
+  position: relative;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  row-gap: 72px;
+  column-gap: 4%;
 }
 
-.artifact-card {
-  background-color: transparent;
-  padding: clamp(2.25rem, 4.5vw, 4rem) clamp(1.5rem, 3.5vw, 3.25rem);
+.gear-item {
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 360px;
-  position: relative;
-  border-bottom: var(--hairline);
-  transition: background-color var(--duration-medium) ease,
-              opacity 0.65s var(--ease-standard),
+  align-items: flex-start;
+  transition: opacity 0.45s ease,
+              filter 0.45s ease,
               transform 0.65s var(--ease-standard);
 }
 
-.artifact-card:nth-child(odd) {
-  border-right: var(--hairline);
+/* Asymmetric Desktop Geometry & Vertical Stagger */
+.gear-item--db5 {
+  width: 60%;
 }
 
-.artifact-card:nth-last-child(-n+2) {
-  border-bottom: none;
+.gear-item--omega {
+  width: 35%;
+  margin-top: clamp(3rem, 5.5vw, 5rem);
 }
 
-.artifact-card:hover {
-  background-color: rgba(234, 230, 223, 0.025);
+.gear-item--tailoring {
+  width: 35%;
+  margin-left: 2%;
 }
 
-.artifact-header {
-  margin-bottom: 2.25rem;
+.gear-item--walther {
+  width: 57%;
+  margin-top: clamp(-4.2rem, -4.5vw, -1.75rem);
 }
 
-.artifact-catalog {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
-  color: var(--accent-silver);
-  font-variant-numeric: tabular-nums;
+/* Focus Dimming: Non-active items recede smoothly into obsidian */
+.darkroom-gallery.has-focus .gear-item:not(.is-focused) {
+  opacity: 0.28;
+  filter: brightness(0.65);
+}
+
+.gear-stage {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+}
+
+.gear-item--db5 .gear-stage {
+  aspect-ratio: 16 / 9;
+}
+
+.gear-item--omega .gear-stage {
+  aspect-ratio: 1 / 1;
+  touch-action: pan-y;
+}
+
+.gear-item--tailoring .gear-stage {
+  aspect-ratio: 3 / 4;
+}
+
+.gear-item--walther .gear-stage {
+  aspect-ratio: 16 / 9;
+}
+
+.gear-clip {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #09090b;
+}
+
+.gear-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   display: block;
-  margin-bottom: 1.15rem;
-  transition: color var(--duration-fast) ease;
+  pointer-events: none;
+  transition: filter 0.55s var(--ease-standard);
 }
 
-.artifact-card:hover .artifact-catalog {
-  color: var(--text-primary);
+/* Darkroom Cursor-Follow Rim Glow */
+.gear-rim-light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+  background: radial-gradient(circle 220px at var(--mx, 50%) var(--my, 50%), rgba(234, 230, 223, 0.16), transparent 72%);
+  mix-blend-mode: soft-light;
+  opacity: 0;
+  transition: opacity 0.35s ease;
 }
 
-.artifact-name {
-  font-family: var(--font-serif);
-  font-size: clamp(1.5rem, 2.4vw, 2.15rem);
-  font-weight: 300;
-  line-height: 1.18;
-  color: var(--text-primary);
-  margin-bottom: 0.45rem;
+.gear-item.is-focused .gear-rim-light {
+  opacity: 1;
 }
 
-.artifact-name-zh {
-  font-family: var(--font-sans);
-  font-size: 0.9375rem;
-  font-weight: 300;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  margin-bottom: 1.5rem;
+/* Seamless Perimeter Feather into Matte #09090b Void */
+.gear-edge-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 7;
+  background:
+    linear-gradient(to bottom, #09090b 0%, transparent 10%, transparent 90%, #09090b 100%),
+    linear-gradient(to right, #09090b 0%, transparent 8%, transparent 92%, #09090b 100%),
+    radial-gradient(ellipse 76% 74% at 50% 50%, transparent 48%, rgba(9, 9, 11, 0.65) 84%, #09090b 100%);
 }
 
-.artifact-specs {
+/* --- 1. Aston Martin DB5 Vintage Halogen Headlights --- */
+.db5-lights-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gear-item--db5.is-lights-on .db5-lights-layer {
+  opacity: 1;
+}
+
+.db5-lamp {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 24%;
+  height: 36%;
+  pointer-events: none;
+}
+
+.db5-lamp-left {
+  left: 15.2%;
+  top: 47.0%;
+}
+
+.db5-lamp-right {
+  left: 51.8%;
+  top: 46.8%;
+}
+
+.db5-lamp-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34%;
+  height: 34%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, #FFFDF7 0%, rgba(255, 244, 214, 0.92) 32%, rgba(255, 224, 168, 0.32) 66%, transparent 100%);
+}
+
+.db5-lamp-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 232, 184, 0.48) 0%, rgba(255, 214, 150, 0.16) 44%, transparent 74%);
+}
+
+.db5-lamp-beam {
+  position: absolute;
+  left: 42%;
+  top: 46%;
+  width: 140%;
+  height: 150%;
+  transform: translate(-55%, -10%) rotate(-12deg);
+  background: radial-gradient(ellipse 60% 72% at 50% 0%, rgba(255, 236, 198, 0.20) 0%, rgba(255, 226, 174, 0.06) 52%, transparent 82%);
+  filter: blur(8px);
+}
+
+/* --- 2. Omega Seamaster 300M Rotating Bezel Layer & Readout --- */
+.watch-bezel-rotator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
+  transform-origin: 50% 48.2%;
+  will-change: transform;
+  /* Pure circular ring matching exact image width 23.4% inner to 30.8% outer radius */
+  -webkit-mask-image: radial-gradient(circle at 50% 48.2%, transparent 32.3%, #000 32.8%, #000 42.4%, transparent 43.0%);
+  mask-image: radial-gradient(circle at 50% 48.2%, transparent 32.3%, #000 32.8%, #000 42.4%, transparent 43.0%);
+}
+
+.gear-item--omega.is-bezel-snap .watch-bezel-rotator {
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bezel-readout {
+  position: absolute;
+  top: 7%;
+  right: 5%;
+  z-index: 16;
   font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: #EAE6DF;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  text-shadow: 0 1px 8px #09090b;
+}
+
+.gear-item--omega.is-bezel-active .bezel-readout {
+  opacity: 0.88;
+  transform: translateY(0);
+}
+
+/* --- 3. Walther PPK Q-Branch Biometric Grip Scan --- */
+.gear-item--walther .gear-photo {
+  filter: brightness(0.55) contrast(1.05);
+}
+
+.gear-item--walther.is-unlocked .gear-photo {
+  filter: brightness(1.08) contrast(1.06);
+}
+
+.ppk-scan-zone {
+  position: absolute;
+  left: 58%;
+  top: 26%;
+  width: 26%;
+  height: 60%;
+  z-index: 8;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ppk-scan-beam {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(234, 230, 223, 0.95) 50%, transparent 100%);
+  box-shadow: 0 0 12px rgba(234, 230, 223, 0.72), 0 0 24px rgba(190, 210, 230, 0.35);
+  opacity: 0;
+}
+
+.gear-item--walther.is-scanning .ppk-scan-beam {
+  animation: ppkScanSweep 0.44s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes ppkScanSweep {
+  0% { top: 0%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* --- 4. Bespoke Tailoring Savile Row 2.1x Optical Loupe --- */
+.gear-item--tailoring.is-loupe-active .gear-stage {
+  cursor: none;
+}
+
+.tailoring-loupe {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 136px;
+  height: 136px;
+  border-radius: 50%;
+  border: 1px solid rgba(234, 230, 223, 0.45);
+  background-color: #09090b;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 12;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.75);
+  transition: opacity 0.2s ease, transform 0.24s var(--ease-standard);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), inset 0 0 18px rgba(9, 9, 11, 0.35);
+}
+
+.tailoring-loupe::before,
+.tailoring-loupe::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(234, 230, 223, 0.28);
+  pointer-events: none;
+}
+
+.tailoring-loupe::before {
+  width: 14px;
+  height: 1px;
+}
+
+.tailoring-loupe::after {
+  width: 1px;
+  height: 14px;
+}
+
+.gear-item--tailoring.is-loupe-active .tailoring-loupe {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* --- Whisper-Quiet Hotspots & Hairline Annotations --- */
+.gear-hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  z-index: 15;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s ease;
+}
+
+.gear-item.is-focused .gear-hotspot {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* PPK biometric grip ring pulses faintly in idle locked state; remaining hotspots wait for unlock */
+.gear-item--walther:not(.is-unlocked) .gear-hotspot {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gear-item--walther:not(.is-unlocked) .gear-hotspot--biometric {
+  opacity: 0.72;
+  pointer-events: auto;
+}
+
+.gear-item--walther:not(.is-unlocked) .gear-hotspot--biometric .hotspot-core {
+  width: 5px;
+  height: 5px;
+  background: rgba(234, 230, 223, 0.78);
+}
+
+.gear-item--walther:not(.is-unlocked) .gear-hotspot--biometric .hotspot-ring {
+  width: 22px;
+  height: 22px;
+  border-color: rgba(234, 230, 223, 0.55);
+  animation: hotspotPulse 2.4s ease-in-out infinite;
+}
+
+.gear-item--walther.is-focused.is-unlocked .gear-hotspot {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hotspot-core {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #EAE6DF;
+  position: relative;
+  z-index: 2;
+  transition: transform 0.25s ease;
+}
+
+.hotspot-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(234, 230, 223, 0.45);
+  transform: translate(-50%, -50%);
+  animation: hotspotPulse 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes hotspotPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.35; }
+  50% { transform: translate(-50%, -50%) scale(1.22); opacity: 0.85; }
+}
+
+.gear-hotspot:hover .hotspot-core,
+.gear-hotspot.is-active .hotspot-core {
+  transform: scale(1.25);
+}
+
+.hotspot-callout {
+  position: absolute;
+  top: 50%;
+  left: calc(50% + 9px);
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  pointer-events: none;
+}
+
+.gear-hotspot--left .hotspot-callout {
+  left: auto;
+  right: calc(50% + 9px);
+  flex-direction: row-reverse;
+}
+
+.hotspot-line {
+  display: block;
+  width: 0;
+  height: 1px;
+  background-color: rgba(234, 230, 223, 0.45);
+  transition: width 0.28s var(--ease-standard);
+}
+
+.hotspot-label {
+  font-family: var(--font-sans);
   font-size: 0.72rem;
-  line-height: 1.75;
-  color: var(--text-muted);
-  padding-left: 1rem;
-  border-left: 1px solid var(--border-active);
-  margin-top: 1.25rem;
-  letter-spacing: 0.04em;
-  transition: border-left-color var(--duration-fast) ease, color var(--duration-fast) ease;
-}
-
-.artifact-card:hover .artifact-specs {
-  border-left-color: var(--text-primary);
-  color: var(--accent-silver);
-}
-
-.artifact-commentary {
-  font-size: 0.9375rem;
   font-weight: 300;
-  line-height: 1.85;
-  color: var(--text-muted);
-  margin-top: 2rem;
-  border-top: var(--hairline);
-  padding-top: 1.5rem;
+  letter-spacing: 0.04em;
+  color: #EAE6DF;
+  white-space: nowrap;
+  padding-left: 8px;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.25s ease 0.08s, transform 0.25s ease 0.08s;
+  text-shadow: 0 1px 8px #09090b, 0 0 14px rgba(9, 9, 11, 0.96);
+}
+
+.gear-hotspot--left .hotspot-label {
+  padding-left: 0;
+  padding-right: 8px;
+  transform: translateX(4px);
+}
+
+.gear-hotspot:hover .hotspot-line,
+.gear-hotspot.is-active .hotspot-line,
+.gear-hotspot:focus-visible .hotspot-line {
+  width: 28px;
+}
+
+.gear-hotspot:hover .hotspot-label,
+.gear-hotspot.is-active .hotspot-label,
+.gear-hotspot:focus-visible .hotspot-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Bottom Minimal Ivory Nameplate (Zero text on idle) */
+.gear-meta-bar {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin-top: 1rem;
+  min-height: 26px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+}
+
+.gear-item.is-focused .gear-meta-bar {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gear-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 1.45vw, 1.35rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #EAE6DF;
+}
+
+.gear-status-cue {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  text-transform: uppercase;
 }
 
 /* ==========================================================================
@@ -1384,6 +1787,26 @@ button {
   }
 }
 
+@media (max-width: 959px) {
+  .darkroom-gallery {
+    flex-direction: column;
+    align-items: stretch;
+    row-gap: 3.5rem;
+  }
+
+  .gear-item--db5,
+  .gear-item--omega,
+  .gear-item--tailoring,
+  .gear-item--walther {
+    width: 100%;
+    margin: 0;
+  }
+
+  .tailoring-loupe {
+    display: none !important;
+  }
+}
+
 @media (max-width: 768px) {
   :root {
     --nav-height: 56px;
@@ -1498,22 +1921,8 @@ button {
     margin-right: 22px;
   }
 
-  .artifacts-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .artifact-card {
-    padding: 2rem 0.5rem;
-    min-height: auto;
-    border-right: none !important;
-  }
-
-  .artifact-card:nth-last-child(-n+2) {
-    border-bottom: var(--hairline);
-  }
-
-  .artifact-card:last-child {
-    border-bottom: none;
+  .hotspot-label {
+    font-size: 0.6875rem;
   }
 
   .soundtrack-row {
@@ -1576,7 +1985,9 @@ button {
   .scroll-pin,
   .skyfall-rain,
   .soundtrack-row.is-playing .eq-bar,
-  .master-audio-control.is-sound-standby .sound-toggle-btn {
+  .master-audio-control.is-sound-standby .sound-toggle-btn,
+  .hotspot-ring,
+  .gear-item--walther.is-scanning .ppk-scan-beam {
     animation: none !important;
   }
 

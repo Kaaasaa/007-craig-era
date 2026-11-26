@@ -48,7 +48,17 @@ const SITE_DATA = {
       sectionIndex: "01",
       sectionCategory: "Q-BRANCH & BESPOKE TAILORING",
       title: "特工器物志",
-      subtitle: "定义现代特工精神的精密器械、冷硬意志与建筑感剪裁。"
+      ui: {
+        bezelPrefix: "BEZEL",
+        bezelUnit: "MIN",
+        db5CueOff: "点击车身点亮复古车灯",
+        db5CueOn: "通电照明中 · 点击熄灭",
+        ppkLocked: "握把生物锁定 · 停留或点击掌纹解锁",
+        ppkScanning: "掌纹特征扫描中…",
+        ppkUnlocked: "007 授权已激活 · 再次点击锁定",
+        omegaCue: "逆时针拖拽或点击旋转潜水表圈",
+        tailoringCue: "移动光标启用 2.1× 萨维尔街光学检视镜"
+      }
     },
 
     soundtracksSection: {
@@ -191,40 +201,61 @@ const SITE_DATA = {
     ],
 
     // ------------------------------------------
-    // 特工器物志 (4 项核心审美符号)
+    // 特工器物志 (4 项暗房静物交互展品：DB5 / Seamaster / Tailoring / Walther PPK)
     // ------------------------------------------
     artifacts: [
       {
         id: "db5",
-        catalogNumber: "ITEM 01 // SPEC-DB5",
         name: "Aston Martin DB5 (1964)",
         nameZh: "阿斯顿·马丁 DB5 (1964)",
-        specs: "4.0L DOHC 直列六缸 / 282 BHP / 银桦色漆面 / BMT 216A 车牌 / M134 微型速射机枪与烟幕系统",
-        commentary: "它不仅是一台座驾，更是邦德的情感避难所与终极机械装甲。数十年间在暗室中被无数次手工修复，承载着军情六处的机械遗产，在马泰拉的石板路与苏格兰荒原上发出最后的咆哮。"
+        image: "assets/gear-db5.webp",
+        aspectRatio: "16 / 9",
+        interactionType: "headlights",
+        hotspots: [
+          { id: "db5-guns", x: 15.2, y: 47.0, label: "M134 隐藏式双管机枪", align: "right" },
+          { id: "db5-plate", x: 28.2, y: 66.8, label: "BMT 216A 三面翻转车牌", align: "right" },
+          { id: "db5-engine", x: 32.0, y: 54.0, label: "4.0L 直列六缸 · 282 BHP", align: "right" }
+        ]
       },
       {
         id: "omega",
-        catalogNumber: "ITEM 02 // SPEC-SM300",
         name: "Omega Seamaster Diver 300M",
         nameZh: "欧米茄海马系列 300 米潜水表",
-        specs: "2 级钛金属表壳 / 同轴至臻天文台 8806 机芯 / 热带棕色铝质表盘 / 英军阔箭标 (Broad Arrow) 军官刻印",
-        commentary: "采用 2 级轻量化钛金属打造，配备军用复古铝质潜水圈与英军阔箭标刻印。它不仅能抵御深海重压与强电磁脉冲，更以近乎苦行僧般的精准节奏，伴他默数生命的每一秒钟。"
-      },
-      {
-        id: "walther",
-        catalogNumber: "ITEM 03 // SPEC-PPK",
-        name: "Walther PPK (7.65mm)",
-        nameZh: "瓦尔特 PPK 半自动手枪 (7.65mm)",
-        specs: "7.65×17mm 勃朗宁弹 / 微型皮下活体掌纹传感器 / 专属性握把识别 / Q 博士定制防夺枪保险",
-        commentary: "终极特工的血肉延伸。在上海高空被 Q 博士升级为微皮下掌纹识别握把，唯有邦德本人的体温与纹理能够击发。冰冷的生铁与掌心血肉在此化作绝密保险。"
+        image: "assets/gear-watch.webp",
+        aspectRatio: "1 / 1",
+        interactionType: "bezel",
+        hotspots: [
+          { id: "omega-bezel", x: 50.0, y: 21.5, label: "单向旋转潜水表圈 · 拖拽或点击拨动", align: "right", role: "bezel" },
+          { id: "omega-calibre", x: 50.0, y: 58.5, label: "英军宽箭头刻印 · 8806 至臻天文台", align: "right" },
+          { id: "omega-hev", x: 21.0, y: 32.0, label: "10 点位排氦阀门 · 2 级钛金属", align: "right" }
+        ]
       },
       {
         id: "tailoring",
-        catalogNumber: "ITEM 04 // SPEC-SARTORIAL",
         name: "Bespoke Tailoring & Knitwear",
         nameZh: "高级定制剪裁与战术针织",
-        specs: "Tom Ford O’Connor 级手工剪裁西服 / Barbour Beacon 重磅打蜡猎装夹克 / N.Peal 炭灰罗纹高领羊绒衫",
-        commentary: "将战术机能性升华为严苛的建筑美学。高袖窿剪裁令西装在激烈近战中依旧严丝合缝；重磅蜡棉夹克傲立于北国凛风；暗炭灰羊绒针织衫，则将暗影与记忆一同吸纳于胸膛。"
+        image: "assets/gear-tailoring.webp",
+        aspectRatio: "3 / 4",
+        interactionType: "loupe",
+        hotspots: [
+          { id: "tailoring-lapel", x: 49.0, y: 46.0, label: "Tom Ford O'Connor · 手工撬边戗驳领", align: "right" },
+          { id: "tailoring-shoulder", x: 83.0, y: 44.0, label: "高袖窿建筑感肩线 · 贴合近战机动", align: "left" },
+          { id: "tailoring-knit", x: 18.0, y: 48.0, label: "N.Peal 重磅罗纹海军蓝羊绒针织", align: "right" },
+          { id: "tailoring-pocket", x: 52.0, y: 70.0, label: "手工卷边纯白亚麻口袋巾", align: "right" }
+        ]
+      },
+      {
+        id: "walther",
+        name: "Walther PPK (7.65mm)",
+        nameZh: "瓦尔特 PPK 半自动手枪 (7.65mm)",
+        image: "assets/gear-ppk.webp",
+        aspectRatio: "16 / 9",
+        interactionType: "biometric",
+        hotspots: [
+          { id: "ppk-grip", x: 71.5, y: 56.0, label: "微皮下掌纹生物识别握把 · 仅 007 可击发", align: "left", role: "biometric" },
+          { id: "ppk-safety", x: 69.5, y: 16.0, label: "单/双动保险与击锤解脱杆", align: "left" },
+          { id: "ppk-slide", x: 26.0, y: 16.0, label: "7.65×17mm 勃朗宁短弹 · 烤蓝钢套筒", align: "right" }
+        ]
       }
     ],
 
@@ -321,7 +352,17 @@ const SITE_DATA = {
       sectionIndex: "01",
       sectionCategory: "Q-BRANCH & BESPOKE TAILORING",
       title: "AESTHETIC ARTIFACTS",
-      subtitle: "Instruments of precision, resilience, and sartorial armor defining the modern operative."
+      ui: {
+        bezelPrefix: "BEZEL",
+        bezelUnit: "MIN",
+        db5CueOff: "Click chassis to ignite halogen lamps",
+        db5CueOn: "Headlamps illuminated · Click to extinguish",
+        ppkLocked: "Biometric lock engaged · Hold or click grip",
+        ppkScanning: "Scanning dermal palm print…",
+        ppkUnlocked: "007 Biometrics Authorized · Click grip to lock",
+        omegaCue: "Drag counter-clockwise or click bezel to rotate",
+        tailoringCue: "Inspect weave at 2.1× via Savile Row optical loupe"
+      }
     },
 
     soundtracksSection: {
@@ -464,40 +505,61 @@ const SITE_DATA = {
     ],
 
     // ------------------------------------------
-    // Agent Artifacts (4 Core Aesthetic Symbols)
+    // Agent Artifacts (4 Darkroom Exhibits: DB5 / Seamaster / Tailoring / Walther PPK)
     // ------------------------------------------
     artifacts: [
       {
         id: "db5",
-        catalogNumber: "ITEM 01 // SPEC-DB5",
         name: "Aston Martin DB5 (1964)",
         nameZh: "Aston Martin DB5 (1964)",
-        specs: "4.0L DOHC Inline-6 / 282 BHP / Silver Birch Finish / BMT 216A Plate / Twin M134 Miniguns & Smoke Screen",
-        commentary: "More than a vehicle, the DB5 is Bond's emotional sanctum and ultimate mechanical armor. Rebuilt in secret across decades, it bridges the analog heritage of MI6 with bullet-riddled defiance in Matera and Glencoe."
+        image: "assets/gear-db5.webp",
+        aspectRatio: "16 / 9",
+        interactionType: "headlights",
+        hotspots: [
+          { id: "db5-guns", x: 15.2, y: 47.0, label: "Concealed M134 Miniguns", align: "right" },
+          { id: "db5-plate", x: 28.2, y: 66.8, label: "Revolving Plate · BMT 216A", align: "right" },
+          { id: "db5-engine", x: 32.0, y: 54.0, label: "4.0L Straight-Six · 282 BHP", align: "right" }
+        ]
       },
       {
         id: "omega",
-        catalogNumber: "ITEM 02 // SPEC-SM300",
         name: "Omega Seamaster Diver 300M",
         nameZh: "Omega Seamaster Diver 300M",
-        specs: "Grade 2 Titanium / Co-Axial Master Chronometer Calibre 8806 / Tropical Brown Dial / Broad Arrow Military Engraving",
-        commentary: "Constructed with military-grade titanium and an austere tropical aluminum bezel. Built to withstand extreme oceanic depth and electromagnetic pulses, ticking with monastic precision until the final second."
-      },
-      {
-        id: "walther",
-        catalogNumber: "ITEM 03 // SPEC-PPK",
-        name: "Walther PPK (7.65mm)",
-        nameZh: "Walther PPK (7.65mm)",
-        specs: "7.65×17mm Browning (.32 ACP) / Biometric Micro-Sensors / Palm-Print Grip Recognition / Q-Branch Custom Failsafe",
-        commentary: "The definitive extension of the lethal operative. Upgraded in Shanghai with micro-dermal palm print sensors, ensuring that only Bond's hand can command the hammer, turning personal biology into a declassified failsafe."
+        image: "assets/gear-watch.webp",
+        aspectRatio: "1 / 1",
+        interactionType: "bezel",
+        hotspots: [
+          { id: "omega-bezel", x: 50.0, y: 21.5, label: "Unidirectional Bezel · Drag or Click", align: "right", role: "bezel" },
+          { id: "omega-calibre", x: 50.0, y: 58.5, label: "Broad Arrow · Co-Axial Calibre 8806", align: "right" },
+          { id: "omega-hev", x: 21.0, y: 32.0, label: "Helium Escape Valve · Grade 2 Titanium", align: "right" }
+        ]
       },
       {
         id: "tailoring",
-        catalogNumber: "ITEM 04 // SPEC-SARTORIAL",
         name: "Bespoke Tailoring & Knitwear",
         nameZh: "Bespoke Tailoring & Knitwear",
-        specs: "Tom Ford Bespoke O’Connor Suiting / Barbour Beacon Waxed Sports Jacket / N.Peal Cashmere Ribbed Mock Turtle",
-        commentary: "Tactical elegance elevated to architectural doctrine. High-armhole suiting engineered for close-quarters combat, rugged waxed cotton for northern gales, and dark charcoal cashmere that absorbs shadow and memory alike."
+        image: "assets/gear-tailoring.webp",
+        aspectRatio: "3 / 4",
+        interactionType: "loupe",
+        hotspots: [
+          { id: "tailoring-lapel", x: 49.0, y: 46.0, label: "Tom Ford O'Connor · Hand-Stitched Lapel", align: "right" },
+          { id: "tailoring-shoulder", x: 83.0, y: 44.0, label: "High-Armhole Architectural Shoulder", align: "left" },
+          { id: "tailoring-knit", x: 18.0, y: 48.0, label: "N.Peal Heavy Ribbed Cashmere Knit", align: "right" },
+          { id: "tailoring-pocket", x: 52.0, y: 70.0, label: "Hand-Rolled White Linen Pocket Square", align: "right" }
+        ]
+      },
+      {
+        id: "walther",
+        name: "Walther PPK (7.65mm)",
+        nameZh: "Walther PPK (7.65mm)",
+        image: "assets/gear-ppk.webp",
+        aspectRatio: "16 / 9",
+        interactionType: "biometric",
+        hotspots: [
+          { id: "ppk-grip", x: 71.5, y: 56.0, label: "Palm-Print Biometric Grip · Authorized", align: "left", role: "biometric" },
+          { id: "ppk-safety", x: 69.5, y: 16.0, label: "Slide-Mounted Safety & Decocker", align: "left" },
+          { id: "ppk-slide", x: 26.0, y: 16.0, label: "7.65mm Browning · Blued Steel Slide", align: "right" }
+        ]
       }
     ],
 

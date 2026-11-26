@@ -257,22 +257,21 @@
 
     </section>
 
-    <!-- Section 3: Q-Branch & Tailoring Archive (Swiss Grid) -->
-    <section class="archive-section" id="artifacts" aria-labelledby="artifacts-title">
+    <!-- Section 3: Q-Branch & Bespoke Tailoring (Interactive Darkroom Gallery) -->
+    <section class="archive-section darkroom-section" id="artifacts" aria-labelledby="artifacts-title">
       <div class="container-editorial">
-        <!-- Section Header -->
-        <header class="section-header">
+        <!-- Minimal Section Header (No Subtitle Paragraph) -->
+        <header class="section-header section-header--minimal">
           <div class="section-meta-strip">
             <span class="section-index" id="artifacts-section-idx">01</span>
             <span class="section-sep" aria-hidden="true">/</span>
             <span class="section-category" id="artifacts-section-cat"></span>
           </div>
           <h2 class="section-title" id="artifacts-title"></h2>
-          <p class="section-subtitle" id="artifacts-subtitle"></p>
         </header>
 
-        <!-- Swiss 2x2 Grid for Artifacts -->
-        <div class="artifacts-grid" id="artifacts-grid-container">
+        <!-- Asymmetric Darkroom Interactive Gallery -->
+        <div class="darkroom-gallery" id="artifacts-grid-container">
           <!-- Dynamically populated by app.js from SITE_DATA.artifacts -->
         </div>
       </div>
@@ -326,8 +325,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
 
-  <!-- Data Layer & Application Engine -->
+  <!-- Data Layer, Offline Base64 SFX & Application Engine -->
   <script src="data.js"></script>
+  <script src="sfx-data.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

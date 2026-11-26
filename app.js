@@ -82,6 +82,22 @@
   let isManualPlaying = false;
   let manualProgressPct = 0;
 
+  // Interactive Darkroom Exhibit State (persists across bilingual re-renders)
+  const gearState = {
+    focusedId: null,
+    activeHotspotId: null,
+    db5LightsOn: false,
+    watchAngle: 0,
+    watchRatchetStep: 0,
+    bezelHideTimer: null,
+    ppkUnlocked: false,
+    ppkScanning: false,
+    ppkHoverTimer: null,
+    ppkScanTimer: null
+  };
+  let gearAudioCtx = null;
+  let darkroomInitialized = false;
+
   // Verify that SITE_DATA is loaded
   const siteData = typeof SITE_DATA !== 'undefined' ? SITE_DATA : (window.SITE_DATA || globalThis.SITE_DATA);
   if (!siteData) {
@@ -148,7 +164,6 @@
     artifactsSectionIdx: document.getElementById('artifacts-section-idx'),
     artifactsSectionCat: document.getElementById('artifacts-section-cat'),
     artifactsTitle: document.getElementById('artifacts-title'),
-    artifactsSubtitle: document.getElementById('artifacts-subtitle'),
     artifactsGridContainer: document.getElementById('artifacts-grid-container'),
 
     // Soundtracks Section
@@ -201,11 +216,10 @@
       }
     }
 
-    // Artifacts Section Headers
+    // Artifacts Section Headers (Subtitle omitted for zero-clutter darkroom gallery)
     if (DOM.artifactsSectionIdx) DOM.artifactsSectionIdx.textContent = data.artifactsSection.sectionIndex;
     if (DOM.artifactsSectionCat) DOM.artifactsSectionCat.textContent = data.artifactsSection.sectionCategory;
     if (DOM.artifactsTitle) DOM.artifactsTitle.textContent = data.artifactsSection.title;
-    if (DOM.artifactsSubtitle) DOM.artifactsSubtitle.textContent = data.artifactsSection.subtitle;
 
     // Soundtracks Section Headers
     if (DOM.soundtracksSectionIdx) DOM.soundtracksSectionIdx.textContent = data.soundtracksSection.sectionIndex;
@@ -255,29 +269,717 @@
     if (DOM.dossierValGear) DOM.dossierValGear.textContent = film.signatureProp;
   }
 
+  // ==========================================
+  // 3B. WEB AUDIO API PRECISION MECHANICAL SYNTHESIZER (GearSFX)
+  // ==========================================
+
+  function getGearAudioContext(shouldResume = true) {
+    if (typeof window === 'undefined') return null;
+    if (!gearAudioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      try {
+        gearAudioCtx = new Ctx();
+      } catch (e) {
+        return null;
+      }
+    }
+    if (shouldResume && gearAudioCtx && gearAudioCtx.state === 'suspended' && typeof gearAudioCtx.resume === 'function') {
+      gearAudioCtx.resume().catch(() => {});
+    }
+    return gearAudioCtx;
+  }
+
+  function getGearSfxGain() {
+    if (!ambientEnabled && !isManualPlaying && !pendingAutoplayUnlock) return 0;
+    return Math.min(1, Math.max(0.2, masterVolume)) * 0.45;
+  }
+
+  function triggerNoisePulse(ctx, startTime, durationSec, centerHz, qVal, peakGain) {
+    if (typeof ctx.createBuffer !== 'function' || typeof ctx.createBiquadFilter !== 'function') return;
+    const sampleCount = Math.max(1, Math.floor(ctx.sampleRate * durationSec));
+    const buffer = ctx.createBuffer(1, sampleCount, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < sampleCount; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / sampleCount);
+    }
+
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(centerHz, startTime);
+    filter.Q.setValueAtTime(qVal, startTime);
+
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(Math.max(0.0001, peakGain), startTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + durationSec);
+
+    src.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    src.start(startTime);
+    src.stop(startTime + durationSec);
+  }
+
+  function triggerToneSweep(ctx, type, startTime, durationSec, startHz, endHz, peakGain) {
+    if (typeof ctx.createOscillator !== 'function') return;
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(startHz, startTime);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(40, endHz), startTime + durationSec);
+
+    gainNode.gain.setValueAtTime(0.0001, startTime);
+    gainNode.gain.linearRampToValueAtTime(Math.max(0.0001, peakGain), startTime + 0.002);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + durationSec);
+
+    osc.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + durationSec + 0.005);
+  }
+
+  const GEAR_SFX_PATHS = {
+    bezel: 'assets/sfx-bezel.mp3',
+    switch: 'assets/sfx-switch.mp3',
+    unlock: 'assets/sfx-unlock.mp3'
+  };
+  const gearAudioBuffers = new Map();
+  const gearBufferPromises = new Map();
+
+  function base64ToArrayBuffer(b64) {
+    if (!b64 || typeof atob !== 'function') return null;
+    try {
+      const binary = atob(b64);
+      const len = binary.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes.buffer;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function decodeAudioDataSafe(ctx, arrBuf) {
+    if (!ctx || !arrBuf || typeof ctx.decodeAudioData !== 'function') {
+      return Promise.resolve(null);
+    }
+    const copyBuf = typeof arrBuf.slice === 'function' ? arrBuf.slice(0) : arrBuf;
+    return new Promise((resolve) => {
+      try {
+        const ret = ctx.decodeAudioData(
+          copyBuf,
+          (decoded) => resolve(decoded || null),
+          () => resolve(null)
+        );
+        if (ret && typeof ret.then === 'function') {
+          ret.then((decoded) => resolve(decoded || null)).catch(() => resolve(null));
+        }
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  }
+
+  function computeLeadingTrimOffset(audioBuffer) {
+    if (!audioBuffer || typeof audioBuffer.getChannelData !== 'function' || !audioBuffer.sampleRate) {
+      return 0;
+    }
+    const ch = audioBuffer.getChannelData(0);
+    if (!ch || ch.length === 0) return 0;
+    const maxScan = Math.min(ch.length, Math.floor(audioBuffer.sampleRate * 0.15));
+    for (let i = 0; i < maxScan; i++) {
+      if (Math.abs(ch[i]) > 0.008) {
+        const rollBack = Math.floor(audioBuffer.sampleRate * 0.001); // 1ms safety pre-roll
+        return Math.max(0, (i - rollBack) / audioBuffer.sampleRate);
+      }
+    }
+    return 0;
+  }
+
+  function preloadGearSamples() {
+    const ctx = getGearAudioContext(false);
+    if (!ctx || typeof ctx.decodeAudioData !== 'function') return;
+
+    const inlineMap = (typeof window !== 'undefined' && window.GEAR_SFX_BASE64) ||
+      (typeof globalThis !== 'undefined' && globalThis.GEAR_SFX_BASE64) ||
+      null;
+    const isFileProtocol = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
+
+    Object.keys(GEAR_SFX_PATHS).forEach((key) => {
+      if (gearAudioBuffers.has(key) || gearBufferPromises.has(key)) return;
+
+      let bufPromise = null;
+      const inlineB64 = inlineMap && typeof inlineMap[key] === 'string' ? inlineMap[key] : '';
+      if (inlineB64) {
+        const arrBuf = base64ToArrayBuffer(inlineB64);
+        if (arrBuf) {
+          bufPromise = decodeAudioDataSafe(ctx, arrBuf);
+        }
+      } else if (!isFileProtocol && typeof fetch === 'function') {
+        bufPromise = fetch(GEAR_SFX_PATHS[key])
+          .then((res) => (res && res.ok ? res.arrayBuffer() : null))
+          .then((arrBuf) => (arrBuf ? decodeAudioDataSafe(ctx, arrBuf) : null))
+          .catch(() => null);
+      }
+
+      if (!bufPromise) return;
+
+      const wrapped = bufPromise
+        .then((decoded) => {
+          if (decoded) {
+            gearAudioBuffers.set(key, {
+              buffer: decoded,
+              offsetSec: computeLeadingTrimOffset(decoded)
+            });
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          gearBufferPromises.delete(key);
+        });
+      gearBufferPromises.set(key, wrapped);
+    });
+  }
+
+  function playSampleBuffer(key, playbackRate = 1.0) {
+    const baseVol = getGearSfxGain();
+    const ctx = getGearAudioContext();
+    if (!ctx || baseVol <= 0) return true; // Muted state: suppress without error
+
+    preloadGearSamples();
+
+    const entry = gearAudioBuffers.get(key);
+    if (!entry || !entry.buffer || typeof ctx.createBufferSource !== 'function' || typeof ctx.createGain !== 'function') {
+      return false;
+    }
+
+    const src = ctx.createBufferSource();
+    src.buffer = entry.buffer;
+    if (src.playbackRate && typeof src.playbackRate.setValueAtTime === 'function') {
+      src.playbackRate.setValueAtTime(playbackRate, ctx.currentTime);
+    } else if (src.playbackRate) {
+      src.playbackRate.value = playbackRate;
+    }
+
+    // Scale real normalized -1 dBFS foley cleanly to global masterVolume (0.2..1.0)
+    const sampleGain = Math.min(1, Math.max(0.2, masterVolume)) * 0.85;
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(Math.max(0.0001, sampleGain), ctx.currentTime);
+
+    src.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    src.start(ctx.currentTime, entry.offsetSec || 0);
+    return true;
+  }
+
+  function synthesizeBezelClick(vol, ctx) {
+    const t = ctx.currentTime;
+    triggerNoisePulse(ctx, t, 0.012, 4200, 2.4, vol * 0.65);
+    triggerToneSweep(ctx, 'sine', t, 0.018, 3800, 1600, vol * 0.32);
+  }
+
+  function synthesizeToggleSwitch(vol, ctx) {
+    const t = ctx.currentTime;
+    triggerToneSweep(ctx, 'triangle', t, 0.024, 920, 310, vol * 0.65);
+    triggerNoisePulse(ctx, t, 0.012, 1800, 1.8, vol * 0.42);
+
+    const t2 = t + 0.028;
+    triggerToneSweep(ctx, 'triangle', t2, 0.026, 1340, 420, vol * 0.72);
+    triggerNoisePulse(ctx, t2, 0.012, 2400, 2.1, vol * 0.48);
+  }
+
+  function synthesizeSafetyUnlock(vol, ctx) {
+    const t = ctx.currentTime;
+    if (typeof ctx.createOscillator === 'function') {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2100, t);
+      osc.frequency.exponentialRampToValueAtTime(2650, t + 0.12);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(vol * 0.14, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.125);
+    }
+
+    const lockAt = t + 0.12;
+    triggerNoisePulse(ctx, lockAt, 0.022, 2800, 2.6, vol * 0.56);
+    triggerToneSweep(ctx, 'triangle', lockAt, 0.032, 1150, 460, vol * 0.75);
+    triggerToneSweep(ctx, 'sine', lockAt, 0.018, 1900, 720, vol * 0.38);
+  }
+
+  const GearSFX = {
+    // 1. Omega Seamaster bezel ratchet sample (subtle 0.96–1.04 micro-pitch variation)
+    playBezelClick() {
+      const rate = 0.96 + Math.random() * 0.08;
+      if (playSampleBuffer('bezel', rate)) return;
+      const vol = getGearSfxGain();
+      const ctx = getGearAudioContext();
+      if (ctx && vol > 0) synthesizeBezelClick(vol, ctx);
+    },
+
+    // 2. DB5 vintage metallic toggle switch sample
+    playToggleSwitch() {
+      if (playSampleBuffer('switch', 1.0)) return;
+      const vol = getGearSfxGain();
+      const ctx = getGearAudioContext();
+      if (ctx && vol > 0) synthesizeToggleSwitch(vol, ctx);
+    },
+
+    // 3. Walther PPK cold slide-lock / safety sample
+    playSafetyUnlock() {
+      if (playSampleBuffer('unlock', 1.0)) return;
+      const vol = getGearSfxGain();
+      const ctx = getGearAudioContext();
+      if (ctx && vol > 0) synthesizeSafetyUnlock(vol, ctx);
+    }
+  };
+
+  function getGearStatusText(itemId, ui) {
+    if (!ui) return '';
+    if (itemId === 'db5') return gearState.db5LightsOn ? ui.db5CueOn : ui.db5CueOff;
+    if (itemId === 'omega') return ui.omegaCue;
+    if (itemId === 'tailoring') return ui.tailoringCue;
+    if (itemId === 'walther') {
+      if (gearState.ppkScanning) return ui.ppkScanning;
+      return gearState.ppkUnlocked ? ui.ppkUnlocked : ui.ppkLocked;
+    }
+    return '';
+  }
+
+  function formatBezelReadout(angleDeg, ui) {
+    const absDeg = Math.abs(angleDeg % 360);
+    const mins = Math.round(absDeg / 6) % 60;
+    const prefix = (ui && ui.bezelPrefix) || 'BEZEL';
+    const unit = (ui && ui.bezelUnit) || 'MIN';
+    return `${prefix} ${String(mins).padStart(2, '0')} ${unit}`;
+  }
+
   function renderArtifactsGrid(artifacts, lang) {
     if (!DOM.artifactsGridContainer || !Array.isArray(artifacts)) return;
 
+    const data = siteData[lang] || siteData[currentLang];
+    const ui = (data && data.artifactsSection && data.artifactsSection.ui) || {};
     const revealClass = artifactsRevealed ? 'reveal-item is-revealed' : 'reveal-item';
 
-    const html = artifacts.map(item => {
-      const displayName = item.name;
-      const displayNameZh = (lang === 'zh' && item.nameZh) ? `<div class="artifact-name-zh">${escapeHTML(item.nameZh)}</div>` : '';
+    DOM.artifactsGridContainer.classList.toggle('has-focus', Boolean(gearState.focusedId));
+
+    const html = artifacts.map((item) => {
+      const displayName = (lang === 'zh' && item.nameZh) ? item.nameZh : item.name;
+      const isFocused = gearState.focusedId === item.id ? 'is-focused' : '';
+      const isLightsOn = (item.id === 'db5' && gearState.db5LightsOn) ? 'is-lights-on' : '';
+      const isUnlocked = (item.id === 'walther' && gearState.ppkUnlocked) ? 'is-unlocked' : '';
+      const statusCue = getGearStatusText(item.id, ui);
+
+      let extraMediaHtml = '';
+      if (item.id === 'db5') {
+        extraMediaHtml = `
+          <div class="db5-lights-layer" aria-hidden="true">
+            <div class="db5-lamp db5-lamp-left">
+              <div class="db5-lamp-beam"></div>
+              <div class="db5-lamp-halo"></div>
+              <div class="db5-lamp-core"></div>
+            </div>
+            <div class="db5-lamp db5-lamp-right">
+              <div class="db5-lamp-beam"></div>
+              <div class="db5-lamp-halo"></div>
+              <div class="db5-lamp-core"></div>
+            </div>
+          </div>
+        `;
+      } else if (item.id === 'omega') {
+        extraMediaHtml = `
+          <div class="watch-bezel-rotator" style="transform: rotate(${gearState.watchAngle.toFixed(2)}deg);" aria-hidden="true">
+            <img src="${escapeHTML(item.image)}" alt="" class="gear-photo" draggable="false" />
+          </div>
+        `;
+      } else if (item.id === 'walther') {
+        extraMediaHtml = `
+          <div class="ppk-scan-zone" aria-hidden="true">
+            <div class="ppk-scan-beam"></div>
+          </div>
+        `;
+      } else if (item.id === 'tailoring') {
+        extraMediaHtml = `
+          <div class="tailoring-loupe" style="background-image: url('${escapeHTML(item.image)}');" aria-hidden="true"></div>
+        `;
+      }
+
+      const hotspotsHtml = Array.isArray(item.hotspots) ? item.hotspots.map((spot) => {
+        const alignCls = spot.align === 'left' ? 'gear-hotspot--left' : '';
+        const roleCls = spot.role === 'biometric' ? 'gear-hotspot--biometric' : '';
+        const activeCls = gearState.activeHotspotId === spot.id ? 'is-active' : '';
+        return `
+          <button type="button"
+                  class="gear-hotspot ${alignCls} ${roleCls} ${activeCls}"
+                  data-hotspot-id="${escapeHTML(spot.id)}"
+                  data-hotspot-role="${escapeHTML(spot.role || '')}"
+                  style="left: ${spot.x}%; top: ${spot.y}%;"
+                  aria-label="${escapeHTML(spot.label)}">
+            <span class="hotspot-ring" aria-hidden="true"></span>
+            <span class="hotspot-core" aria-hidden="true"></span>
+            <span class="hotspot-callout" aria-hidden="true">
+              <span class="hotspot-line"></span>
+              <span class="hotspot-label">${escapeHTML(spot.label)}</span>
+            </span>
+          </button>
+        `;
+      }).join('') : '';
+
+      const bezelReadoutHtml = item.id === 'omega'
+        ? `<div class="bezel-readout" aria-live="polite">${escapeHTML(formatBezelReadout(gearState.watchAngle, ui))}</div>`
+        : '';
 
       return `
-        <article class="artifact-card ${revealClass}" data-artifact-id="${item.id}">
-          <div class="artifact-header">
-            <span class="artifact-catalog">${escapeHTML(item.catalogNumber)}</span>
-            <h3 class="artifact-name">${escapeHTML(displayName)}</h3>
-            ${displayNameZh}
-            <div class="artifact-specs">${escapeHTML(item.specs)}</div>
+        <article class="gear-item gear-item--${escapeHTML(item.id)} ${revealClass} ${isFocused} ${isLightsOn} ${isUnlocked}"
+                 data-gear-id="${escapeHTML(item.id)}"
+                 data-interaction="${escapeHTML(item.interactionType || '')}">
+          <div class="gear-stage" tabindex="0" aria-label="${escapeHTML(displayName)}">
+            <div class="gear-clip">
+              <img src="${escapeHTML(item.image)}" alt="${escapeHTML(displayName)}" class="gear-photo" loading="lazy" draggable="false" />
+              ${extraMediaHtml}
+              <div class="gear-rim-light" aria-hidden="true"></div>
+              <div class="gear-edge-vignette" aria-hidden="true"></div>
+            </div>
+            ${bezelReadoutHtml}
+            ${hotspotsHtml}
           </div>
-          <p class="artifact-commentary">${escapeHTML(item.commentary)}</p>
+          <div class="gear-meta-bar">
+            <h3 class="gear-title">${escapeHTML(displayName)}</h3>
+            <span class="gear-status-cue">${escapeHTML(statusCue)}</span>
+          </div>
         </article>
       `;
     }).join('');
 
     DOM.artifactsGridContainer.innerHTML = html;
+  }
+
+  function initDarkroomGallery() {
+    if (darkroomInitialized || !DOM.artifactsGridContainer) return;
+    darkroomInitialized = true;
+
+    const container = DOM.artifactsGridContainer;
+    const isFinePointerDevice = () => (
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches
+    );
+
+    const getCurrentUiStrings = () => {
+      const d = siteData[currentLang];
+      return (d && d.artifactsSection && d.artifactsSection.ui) || {};
+    };
+
+    const setGearFocus = (gearId) => {
+      gearState.focusedId = gearId;
+      container.classList.toggle('has-focus', Boolean(gearId));
+      const items = container.querySelectorAll('.gear-item');
+      items.forEach((item) => {
+        item.classList.toggle('is-focused', item.getAttribute('data-gear-id') === gearId);
+      });
+    };
+
+    const updateGearCue = (itemEl, text) => {
+      if (!itemEl) return;
+      const cue = itemEl.querySelector('.gear-status-cue');
+      if (cue) cue.textContent = text;
+    };
+
+    const cancelPpkHoverTimer = () => {
+      if (gearState.ppkHoverTimer) {
+        clearTimeout(gearState.ppkHoverTimer);
+        gearState.ppkHoverTimer = null;
+      }
+    };
+
+    const triggerPpkBiometricSequence = (itemEl) => {
+      if (!itemEl || gearState.ppkScanning) return;
+      const ui = getCurrentUiStrings();
+
+      if (gearState.ppkUnlocked) {
+        gearState.ppkUnlocked = false;
+        itemEl.classList.remove('is-unlocked');
+        updateGearCue(itemEl, ui.ppkLocked || '');
+        return;
+      }
+
+      gearState.ppkScanning = true;
+      itemEl.classList.add('is-scanning');
+      updateGearCue(itemEl, ui.ppkScanning || '');
+      GearSFX.playSafetyUnlock();
+
+      if (gearState.ppkScanTimer) clearTimeout(gearState.ppkScanTimer);
+      gearState.ppkScanTimer = setTimeout(() => {
+        gearState.ppkScanning = false;
+        gearState.ppkUnlocked = true;
+        gearState.ppkScanTimer = null;
+        const latestWalther = container.querySelector('.gear-item--walther');
+        if (latestWalther) {
+          latestWalther.classList.remove('is-scanning');
+          latestWalther.classList.add('is-unlocked');
+          updateGearCue(latestWalther, getCurrentUiStrings().ppkUnlocked || '');
+        }
+      }, 420);
+    };
+
+    // Omega Seamaster 300M Bezel Physics State
+    let watchDragActive = false;
+    let watchCenterX = 0;
+    let watchCenterY = 0;
+    let watchPrevPtrAngle = 0;
+    let watchDragAccum = 0;
+
+    const showBezelReadoutTemporarily = () => {
+      const watchItem = container.querySelector('.gear-item--omega');
+      if (!watchItem) return;
+      const readout = watchItem.querySelector('.bezel-readout');
+      if (readout) {
+        readout.textContent = formatBezelReadout(gearState.watchAngle, getCurrentUiStrings());
+      }
+      watchItem.classList.add('is-bezel-active');
+      if (gearState.bezelHideTimer) clearTimeout(gearState.bezelHideTimer);
+      gearState.bezelHideTimer = setTimeout(() => {
+        const latestWatch = container.querySelector('.gear-item--omega');
+        if (latestWatch) latestWatch.classList.remove('is-bezel-active');
+        gearState.bezelHideTimer = null;
+      }, 1200);
+    };
+
+    const applyWatchAngle = (nextAngle, snapAnimate = false) => {
+      gearState.watchAngle = nextAngle;
+      const newStep = Math.floor(Math.abs(gearState.watchAngle) / 6);
+      if (newStep !== gearState.watchRatchetStep) {
+        gearState.watchRatchetStep = newStep;
+        GearSFX.playBezelClick();
+      }
+      const watchItem = container.querySelector('.gear-item--omega');
+      const rotator = watchItem ? watchItem.querySelector('.watch-bezel-rotator') : null;
+      if (watchItem && rotator) {
+        watchItem.classList.toggle('is-bezel-snap', Boolean(snapAnimate));
+        rotator.style.transform = `rotate(${gearState.watchAngle.toFixed(2)}deg)`;
+      }
+      showBezelReadoutTemporarily();
+    };
+
+    // Pre-decode offline Base64 SFX right on first page interaction (zero pre-gesture AudioContext warnings)
+    const onFirstAudioGesture = () => preloadGearSamples();
+    ['pointerdown', 'keydown', 'touchstart'].forEach((evt) => {
+      window.addEventListener(evt, onFirstAudioGesture, { once: true, capture: true, passive: true });
+    });
+
+    // Hover & Focus Management
+    container.addEventListener('pointerover', (e) => {
+      if (gearAudioCtx) preloadGearSamples();
+      if (!isFinePointerDevice()) return;
+      const item = e.target && e.target.closest ? e.target.closest('.gear-item') : null;
+      if (item) {
+        setGearFocus(item.getAttribute('data-gear-id'));
+      }
+    });
+
+    container.addEventListener('pointerleave', () => {
+      cancelPpkHoverTimer();
+      const loupeItem = container.querySelector('.gear-item--tailoring');
+      if (loupeItem) loupeItem.classList.remove('is-loupe-active');
+      if (isFinePointerDevice()) {
+        setGearFocus(null);
+      }
+    });
+
+    container.addEventListener('focusin', (e) => {
+      const item = e.target && e.target.closest ? e.target.closest('.gear-item') : null;
+      if (item) setGearFocus(item.getAttribute('data-gear-id'));
+    });
+
+    // Rim Light + Tailoring Optical Loupe + PPK 450ms Grip Dwell + Watch Drag
+    container.addEventListener('pointermove', (e) => {
+      const item = e.target && e.target.closest ? e.target.closest('.gear-item') : null;
+
+      if (watchDragActive) {
+        const currentAngle = Math.atan2(e.clientY - watchCenterY, e.clientX - watchCenterX) * (180 / Math.PI);
+        let delta = currentAngle - watchPrevPtrAngle;
+        if (delta > 180) delta -= 360;
+        if (delta < -180) delta += 360;
+        watchPrevPtrAngle = currentAngle;
+        // Real diver bezel unidirectional counter-clockwise ratchet (delta < 0)
+        if (delta < 0) {
+          watchDragAccum += Math.abs(delta);
+          applyWatchAngle(gearState.watchAngle + delta, false);
+        }
+        return;
+      }
+
+      if (!item) return;
+      const id = item.getAttribute('data-gear-id');
+      const clip = item.querySelector('.gear-clip');
+      if (!clip || typeof clip.getBoundingClientRect !== 'function') return;
+
+      const rect = clip.getBoundingClientRect();
+      if (!rect || rect.width <= 0 || rect.height <= 0) return;
+
+      const u = Math.min(rect.width, Math.max(0, e.clientX - rect.left));
+      const v = Math.min(rect.height, Math.max(0, e.clientY - rect.top));
+      const uPct = (u / rect.width) * 100;
+      const vPct = (v / rect.height) * 100;
+
+      // Subtle darkroom rim-light follows cursor
+      const rim = item.querySelector('.gear-rim-light');
+      if (rim && rim.style && typeof rim.style.setProperty === 'function') {
+        rim.style.setProperty('--mx', `${uPct.toFixed(1)}%`);
+        rim.style.setProperty('--my', `${vPct.toFixed(1)}%`);
+      }
+
+      // Tailoring 2.1x Savile Row Optical Loupe (Desktop fine pointer only, silent)
+      if (id === 'tailoring') {
+        const loupe = item.querySelector('.tailoring-loupe');
+        if (loupe && isFinePointerDevice()) {
+          const zoom = 2.1;
+          const radius = 68; // 136px diameter / 2
+          item.classList.add('is-loupe-active');
+          loupe.style.left = `${u.toFixed(1)}px`;
+          loupe.style.top = `${v.toFixed(1)}px`;
+          loupe.style.backgroundSize = `${(rect.width * zoom).toFixed(1)}px ${(rect.height * zoom).toFixed(1)}px`;
+          loupe.style.backgroundPosition = `${(radius - u * zoom).toFixed(1)}px ${(radius - v * zoom).toFixed(1)}px`;
+        }
+      }
+
+      // Walther PPK: 450ms dwell over biometric grip triggers scan unlock
+      if (id === 'walther' && !gearState.ppkUnlocked && !gearState.ppkScanning) {
+        const inGripZone = uPct >= 58 && uPct <= 84 && vPct >= 26 && vPct <= 86;
+        if (inGripZone) {
+          if (!gearState.ppkHoverTimer) {
+            gearState.ppkHoverTimer = setTimeout(() => {
+              gearState.ppkHoverTimer = null;
+              const waltherEl = container.querySelector('.gear-item--walther');
+              if (waltherEl && !gearState.ppkUnlocked) {
+                triggerPpkBiometricSequence(waltherEl);
+              }
+            }, 450);
+          }
+        } else {
+          cancelPpkHoverTimer();
+        }
+      }
+    });
+
+    container.addEventListener('pointerout', (e) => {
+      const leftItem = e.target && e.target.closest ? e.target.closest('.gear-item') : null;
+      const toItem = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest('.gear-item') : null;
+      if (leftItem && leftItem !== toItem) {
+        const id = leftItem.getAttribute('data-gear-id');
+        if (id === 'tailoring') leftItem.classList.remove('is-loupe-active');
+        if (id === 'walther') cancelPpkHoverTimer();
+      }
+    });
+
+    // Preload Base64 SFX on pointerdown + Omega Pointer Drag Start (Mouse/Pen, leaves touch scroll completely free)
+    container.addEventListener('pointerdown', (e) => {
+      preloadGearSamples();
+      const omegaItem = e.target && e.target.closest ? e.target.closest('.gear-item--omega') : null;
+      if (!omegaItem || e.pointerType === 'touch') return;
+      const clip = omegaItem.querySelector('.gear-clip');
+      if (!clip || typeof clip.getBoundingClientRect !== 'function') return;
+
+      const rect = clip.getBoundingClientRect();
+      if (!rect || rect.width <= 0) return;
+
+      watchCenterX = rect.left + rect.width * 0.5;
+      watchCenterY = rect.top + rect.height * 0.482;
+      watchPrevPtrAngle = Math.atan2(e.clientY - watchCenterY, e.clientX - watchCenterX) * (180 / Math.PI);
+      watchDragAccum = 0;
+      watchDragActive = true;
+    });
+
+    const stopWatchDrag = () => {
+      watchDragActive = false;
+    };
+    window.addEventListener('pointerup', stopWatchDrag);
+    window.addEventListener('pointercancel', stopWatchDrag);
+
+    // Click Handlers: Mobile Focus + Hotspot Toggle + 4 Exhibit Actions
+    container.addEventListener('click', (e) => {
+      const hotspotBtn = e.target && e.target.closest ? e.target.closest('.gear-hotspot') : null;
+      const item = e.target && e.target.closest ? e.target.closest('.gear-item') : null;
+      if (!item) return;
+
+      const gearId = item.getAttribute('data-gear-id');
+      setGearFocus(gearId);
+
+      // Handle explicit hotspot activation (fine touch / keyboard / explicit dot click)
+      if (hotspotBtn) {
+        const spotId = hotspotBtn.getAttribute('data-hotspot-id');
+        const spotRole = hotspotBtn.getAttribute('data-hotspot-role');
+        const wasActive = gearState.activeHotspotId === spotId;
+        gearState.activeHotspotId = wasActive ? null : spotId;
+
+        container.querySelectorAll('.gear-hotspot').forEach((btn) => {
+          btn.classList.toggle('is-active', btn.getAttribute('data-hotspot-id') === gearState.activeHotspotId);
+        });
+
+        if (spotRole === 'bezel') {
+          applyWatchAngle(gearState.watchAngle - 18, true);
+        } else if (spotRole === 'biometric') {
+          cancelPpkHoverTimer();
+          triggerPpkBiometricSequence(item);
+        } else if (gearId === 'db5') {
+          // Clicking DB5 M134/plate/hood also ignites headlights naturally
+          gearState.db5LightsOn = !gearState.db5LightsOn;
+          item.classList.toggle('is-lights-on', gearState.db5LightsOn);
+          updateGearCue(item, getGearStatusText('db5', getCurrentUiStrings()));
+          GearSFX.playToggleSwitch();
+        }
+        return;
+      }
+
+      // Clear active hotspot pill if clicking empty canvas area of item
+      if (gearState.activeHotspotId) {
+        gearState.activeHotspotId = null;
+        container.querySelectorAll('.gear-hotspot').forEach((btn) => btn.classList.remove('is-active'));
+      }
+
+      if (gearId === 'db5') {
+        gearState.db5LightsOn = !gearState.db5LightsOn;
+        item.classList.toggle('is-lights-on', gearState.db5LightsOn);
+        updateGearCue(item, getGearStatusText('db5', getCurrentUiStrings()));
+        GearSFX.playToggleSwitch();
+      } else if (gearId === 'omega') {
+        // Click dial/bezel advances -18deg counter-clockwise (3 clicks = 3 minutes)
+        if (watchDragAccum < 5) {
+          applyWatchAngle(gearState.watchAngle - 18, true);
+        }
+        watchDragAccum = 0;
+      } else if (gearId === 'walther') {
+        cancelPpkHoverTimer();
+        triggerPpkBiometricSequence(item);
+      }
+    });
+
+    // Keyboard accessibility on gear stages (Enter/Space triggers primary interaction)
+    container.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const stageEl = e.target && e.target.closest ? e.target.closest('.gear-stage') : null;
+      const hotspotBtn = e.target && e.target.closest ? e.target.closest('.gear-hotspot') : null;
+      if (stageEl && !hotspotBtn) {
+        e.preventDefault();
+        stageEl.click();
+      }
+    });
+
+    // Clear mobile focus when tapping outside darkroom gallery
+    document.addEventListener('click', (e) => {
+      if (!isFinePointerDevice() && gearState.focusedId && !container.contains(e.target)) {
+        setGearFocus(null);
+      }
+    });
   }
 
   function renderSoundtrackCatalog(soundtracks, sectionData, lang) {
@@ -361,7 +1063,7 @@
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             artifactsRevealed = true;
-            const cards = DOM.artifactsGridContainer.querySelectorAll('.artifact-card');
+            const cards = DOM.artifactsGridContainer.querySelectorAll('.gear-item');
             cards.forEach((card, idx) => {
               setTimeout(() => {
                 card.classList.add('is-revealed');
@@ -1111,6 +1813,7 @@
     renderStaticText(data);
     setHudContent(currentActIndex, currentLang);
     renderArtifactsGrid(data.artifacts, currentLang);
+    initDarkroomGallery();
     renderSoundtrackCatalog(data.soundtracks, data.soundtracksSection, currentLang);
     initScrollReveals();
   }
@@ -1402,6 +2105,7 @@
     setHudContent(0, currentLang);
 
     renderArtifactsGrid(data.artifacts, currentLang);
+    initDarkroomGallery();
     renderSoundtrackCatalog(data.soundtracks, data.soundtracksSection, currentLang);
     initScrollReveals();
     initAudioPlayer();
