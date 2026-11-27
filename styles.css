@@ -136,6 +136,13 @@ button {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: none;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+
+.site-header.is-dimmed {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .nav-inner {
@@ -1445,10 +1452,7 @@ button {
 .gear-meta-bar {
   width: 100%;
   display: flex;
-  flex-wrap: wrap;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 0.35rem 1rem;
   margin-top: 1rem;
   min-height: 26px;
   opacity: 0;
@@ -1470,246 +1474,125 @@ button {
   color: #EAE6DF;
 }
 
-.gear-status-cue {
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
-  letter-spacing: 0.14em;
-  color: var(--text-dim);
-  text-transform: uppercase;
-}
-
 /* ==========================================================================
-   9. THE SONIC LEGACY (DECLUTTERED 5-COLUMN + SVG EQUALIZER)
+   9. SILENT FILM EPILOGUE STAGE & 007 -> HN STUDIO MORPH EASTER EGG
    ========================================================================== */
-.soundtrack-catalog {
-  display: flex;
-  flex-direction: column;
-  border-top: var(--hairline);
-  border-bottom: var(--hairline);
-}
-
-.soundtrack-header-row {
-  display: grid;
-  grid-template-columns: 72px 2fr 1.3fr 2.8fr 84px;
-  align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-bottom: var(--hairline);
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.2em;
-  color: var(--text-dim);
-  text-transform: uppercase;
-}
-
-.soundtrack-row {
-  display: grid;
-  grid-template-columns: 72px 2fr 1.3fr 2.8fr 84px;
-  align-items: center;
-  padding: 1.85rem 1.5rem;
-  border-bottom: var(--hairline);
+.epilogue-stage {
   position: relative;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color var(--duration-fast) ease,
-              opacity 0.65s var(--ease-standard),
-              transform 0.65s var(--ease-standard);
-}
-
-.soundtrack-row:focus-visible {
-  outline: 1px solid var(--border-active);
-  outline-offset: -1px;
-}
-
-.soundtrack-row:last-child {
-  border-bottom: none;
-}
-
-.soundtrack-row:hover {
-  background-color: rgba(234, 230, 223, 0.025);
-}
-
-.soundtrack-row.is-playing {
-  background-color: rgba(234, 230, 223, 0.035);
-}
-
-.track-year {
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-  color: var(--accent-silver);
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-  transition: color var(--duration-fast) ease;
-}
-
-.soundtrack-row:hover .track-year {
-  color: var(--text-primary);
-}
-
-.track-title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding-right: 1.5rem;
-  transition: transform var(--duration-fast) var(--ease-standard);
-}
-
-.soundtrack-row:hover .track-title-group {
-  transform: translateX(4px);
-}
-
-.track-name {
-  font-family: var(--font-serif);
-  font-size: 1.35rem;
-  font-style: italic;
-  font-weight: 400;
-  color: var(--text-primary);
-  line-height: 1.2;
-}
-
-.track-artist {
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-  font-weight: 300;
-}
-
-.track-film {
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  letter-spacing: 0.1em;
-  color: var(--text-primary);
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding-right: 1.25rem;
-}
-
-.track-film-sub {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-}
-
-.track-critique {
-  font-size: 0.875rem;
-  font-weight: 300;
-  line-height: 1.7;
-  color: var(--text-muted);
-  padding-right: 1rem;
-  transition: color var(--duration-fast) ease;
-}
-
-/* Right-Side Geometric SVG Audio Control & 4-Bar Equalizer */
-.track-audio-ctrl {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.6rem;
-  color: #737373;
-  justify-self: end;
-  transition: color var(--duration-fast) ease;
-}
-
-.soundtrack-row:hover .track-audio-ctrl {
-  color: var(--accent-silver);
-}
-
-.icon-play-svg {
-  display: block;
-}
-
-.icon-pause-svg,
-.eq-bars-svg {
-  display: none;
-}
-
-.soundtrack-row.is-playing .icon-play-svg {
-  display: none;
-}
-
-.soundtrack-row.is-playing .icon-pause-svg,
-.soundtrack-row.is-playing .eq-bars-svg {
-  display: block;
-}
-
-.eq-bar {
-  transform-box: fill-box;
-  transform-origin: bottom center;
-}
-
-.soundtrack-row.is-playing .eq-bar-1 { animation: eqBounce 0.9s ease-in-out infinite 0s; }
-.soundtrack-row.is-playing .eq-bar-2 { animation: eqBounce 0.75s ease-in-out infinite 0.18s; }
-.soundtrack-row.is-playing .eq-bar-3 { animation: eqBounce 1.05s ease-in-out infinite 0.34s; }
-.soundtrack-row.is-playing .eq-bar-4 { animation: eqBounce 0.82s ease-in-out infinite 0.1s; }
-
-@keyframes eqBounce {
-  0%, 100% { transform: scaleY(0.32); opacity: 0.65; }
-  50% { transform: scaleY(1); opacity: 1; }
-}
-
-.soundtrack-row.is-playing .track-year,
-.soundtrack-row.is-playing .track-name,
-.soundtrack-row.is-playing .track-artist,
-.soundtrack-row.is-playing .track-film,
-.soundtrack-row.is-playing .track-film-sub,
-.soundtrack-row.is-playing .track-critique,
-.soundtrack-row.is-playing .track-audio-ctrl {
-  color: #EAE6DF;
-}
-
-/* 1px Real-Time Bottom Playback Progress Line */
-.track-progress-bar {
-  position: absolute;
-  left: 0;
-  bottom: 0;
+  min-height: 100vh;
+  min-height: 100svh;
   width: 100%;
-  height: 1px;
-  background: transparent;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity var(--duration-fast) ease;
-}
-
-.soundtrack-row.is-playing .track-progress-bar {
-  opacity: 1;
-}
-
-.track-progress-fill {
-  width: 0%;
-  height: 100%;
-  background-color: #EAE6DF;
-  transition: width 0.12s linear;
-}
-
-/* ==========================================================================
-   10. CINEMATIC CURTAIN CALL (FINAL BLACKOUT TRIBUTE)
-   ========================================================================== */
-.curtain-call {
-  min-height: 70vh;
-  min-height: 70svh;
-  background-color: var(--bg-curtain);
+  background: #09090b;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: clamp(6rem, 12vh, 9rem) 0 3rem;
-}
-
-.curtain-inner {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;
+  padding: 0 clamp(1.25rem, 4vw, 3.5rem);
+  outline: none;
+}
+
+.epilogue-stage.is-credits-playing {
+  cursor: pointer;
+}
+
+.epilogue-center {
+  position: relative;
+  width: 100%;
+  max-width: min(92vw, 1120px);
+  min-height: clamp(280px, 44vh, 420px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
-.curtain-center {
-  margin: auto 0;
+.epilogue-tribute,
+.epilogue-return,
+.epilogue-final,
+.hn-morph-stage {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.15rem;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  transition: none !important;
+}
+
+/* Phase 2: Daniel Craig Tribute */
+.epilogue-tribute {
+  opacity: 0;
+  visibility: hidden;
+  will-change: opacity, filter, transform;
+}
+
+.epilogue-tribute-main {
+  font-family: var(--font-serif);
+  font-size: clamp(1.125rem, 2.3vw, 2.2rem);
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+  white-space: nowrap;
+  color: #eae6df;
+  margin-bottom: 1.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: none !important;
+  will-change: opacity, filter, transform;
+}
+
+.epilogue-tribute-credit {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  opacity: 0;
+  visibility: hidden;
+  transition: none !important;
+  will-change: opacity, filter, transform;
+}
+
+/* Phase 3: Optical Rack-Focus Bond Promise */
+.epilogue-return {
+  opacity: 0;
+  visibility: hidden;
+  will-change: opacity, filter, transform;
+}
+
+.epilogue-return-text {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(1.15rem, 2.4vw, 1.85rem);
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  color: #eae6df;
+  text-transform: uppercase;
+  line-height: 1.5;
+  transition: none !important;
+  will-change: filter, opacity, transform;
+}
+
+/* Phase 4: Permanent End Screen */
+.epilogue-final {
+  opacity: 0;
+  visibility: hidden;
+  will-change: opacity;
+}
+
+.epilogue-final.is-interactive {
+  pointer-events: auto;
 }
 
 .curtain-quote {
+  margin: 0;
   font-family: var(--font-serif);
   font-size: clamp(1.75rem, 3.6vw, 3rem);
   font-weight: 300;
@@ -1717,76 +1600,142 @@ button {
   letter-spacing: 0.03em;
   color: var(--text-primary);
   line-height: 1.25;
+  transition: none !important;
 }
 
-.curtain-quote-zh {
-  font-family: var(--font-serif);
-  font-size: 0.9375rem;
+/* Corner Secret Trigger: Frameless 42px Fine-Line 007 -> HN Morph */
+.epilogue-hn-trigger {
+  position: absolute;
+  right: 36px;
+  bottom: 36px;
+  padding: 4px 10px;
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  color: #eae6df;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  z-index: 6;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.epilogue-hn-trigger.is-ready {
+  opacity: 0.16;
+  pointer-events: auto;
+}
+
+.epilogue-hn-trigger.is-ready:hover,
+.epilogue-hn-trigger.is-ready:focus-visible {
+  opacity: 0.85;
+}
+
+.epilogue-hn-trigger.is-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Centered Pure SVG 007 -> HN STUDIO Morph Overlay */
+.hn-morph-stage {
+  opacity: 0;
+  visibility: hidden;
+  gap: 0.85rem;
+  z-index: 8;
+}
+
+.hn-morph-stage.is-open {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.hn-morph-close {
+  position: fixed;
+  top: 28px;
+  right: 36px;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  color: rgba(234, 230, 223, 0.45);
+  font-size: 1.5rem;
   font-weight: 300;
-  letter-spacing: 0.24em;
-  color: var(--text-muted);
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: color 0.3s ease, opacity 0.4s ease;
 }
 
-.curtain-era-mark {
+.hn-morph-stage.is-open .hn-morph-close {
+  opacity: 0.48;
+}
+
+.hn-morph-close:hover,
+.hn-morph-close:focus-visible {
+  color: #eae6df;
+  opacity: 1 !important;
+}
+
+.hn-morph-svg-wrap {
+  width: min(360px, 78vw);
+}
+
+.hn-morph-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.hn-morph-path {
+  stroke: #eae6df;
+  stroke-width: 1.6;
+  fill: none;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.hn-morph-sheen-path {
+  stroke: #d4e0eb;
+  stroke-width: 2.3;
+  fill: none;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  filter: drop-shadow(0 0 6px rgba(194, 212, 228, 0.65));
+}
+
+.hn-morph-wordmark {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.28em;
-  color: var(--text-dim);
-  margin-top: 0.75rem;
-  font-variant-numeric: tabular-nums;
+  font-size: 0.875rem;
+  letter-spacing: 0.56em;
+  text-indent: 0.56em;
+  color: #eae6df;
+  opacity: 0;
+  transform: translateY(6px);
 }
 
-.curtain-top-btn {
-  margin-top: 2.25rem;
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-dim);
-  border: 1px solid rgba(234, 230, 223, 0.08);
-  transition: color var(--duration-fast) ease, border-color var(--duration-fast) ease, transform var(--duration-fast) ease;
-}
-
-.curtain-top-btn:hover {
-  color: var(--text-primary);
-  border-color: var(--border-active);
-  transform: translateY(-3px);
-}
-
-.curtain-credit {
+.hn-morph-submark {
   font-family: var(--font-mono);
   font-size: 0.625rem;
-  letter-spacing: 0.28em;
-  color: rgba(152, 147, 139, 0.42);
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  color: rgba(152, 147, 139, 0.58);
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.hn-morph-hint {
+  margin-top: 2.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.24em;
+  color: rgba(152, 147, 139, 0.34);
   text-transform: uppercase;
-  padding-top: 3rem;
+  opacity: 0;
 }
 
 /* ==========================================================================
-   11. RESPONSIVE MEDIA QUERIES
+   10. RESPONSIVE MEDIA QUERIES
    ========================================================================== */
-@media (max-width: 1120px) {
-  .soundtrack-header-row {
-    display: none;
-  }
-
-  .soundtrack-row {
-    grid-template-columns: 68px 1fr 1fr 76px;
-    gap: 1rem 1.25rem;
-  }
-
-  .track-critique {
-    grid-column: 2 / 4;
-    padding-right: 0;
-  }
-
-  .track-audio-ctrl {
-    grid-column: 4 / 5;
-    grid-row: 1;
-  }
-}
-
 @media (max-width: 959px) {
   .darkroom-gallery {
     flex-direction: column;
@@ -1925,39 +1874,20 @@ button {
     font-size: 0.6875rem;
   }
 
-  .soundtrack-row {
-    grid-template-columns: 1fr auto;
-    gap: 0.45rem 1rem;
-    padding: 1.4rem 0.5rem;
+  .epilogue-hn-trigger {
+    right: 20px;
+    bottom: 22px;
   }
 
-  .track-year {
-    grid-column: 1 / 2;
-    font-size: 0.875rem;
+  .hn-morph-close {
+    top: 18px;
+    right: 20px;
   }
+}
 
-  .track-audio-ctrl {
-    grid-column: 2 / 3;
-    grid-row: 1 / 3;
-    align-self: center;
-  }
-
-  .track-title-group {
-    grid-column: 1 / 2;
-    padding-right: 0;
-  }
-
-  .track-film {
-    grid-column: 1 / -1;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.6rem;
-    padding-right: 0;
-    margin-top: 0.15rem;
-  }
-
-  .track-critique {
-    display: none;
+@media (max-width: 639px) {
+  .epilogue-tribute-main {
+    white-space: normal;
   }
 }
 
@@ -1975,7 +1905,7 @@ button {
 }
 
 /* ==========================================================================
-   12. ACCESSIBILITY: REDUCED MOTION PREFERENCE
+   11. ACCESSIBILITY: REDUCED MOTION PREFERENCE
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -1984,7 +1914,6 @@ button {
 
   .scroll-pin,
   .skyfall-rain,
-  .soundtrack-row.is-playing .eq-bar,
   .master-audio-control.is-sound-standby .sound-toggle-btn,
   .hotspot-ring,
   .gear-item--walther.is-scanning .ppk-scan-beam {
@@ -2002,7 +1931,7 @@ button {
   .ruler-year,
   .dossier-popover,
   .crosshair-svg,
-  .soundtrack-row:hover .track-title-group {
+  .epilogue-hn-trigger {
     transition: none !important;
     transform: none !important;
   }

@@ -50,38 +50,20 @@ const SITE_DATA = {
       title: "特工器物志",
       ui: {
         bezelPrefix: "BEZEL",
-        bezelUnit: "MIN",
-        db5CueOff: "点击车身点亮复古车灯",
-        db5CueOn: "通电照明中 · 点击熄灭",
-        ppkLocked: "握把生物锁定 · 停留或点击掌纹解锁",
-        ppkScanning: "掌纹特征扫描中…",
-        ppkUnlocked: "007 授权已激活 · 再次点击锁定",
-        omegaCue: "逆时针拖拽或点击旋转潜水表圈",
-        tailoringCue: "移动光标启用 2.1× 萨维尔街光学检视镜"
+        bezelUnit: "MIN"
       }
-    },
-
-    soundtracksSection: {
-      sectionIndex: "02",
-      sectionCategory: "THE SONIC LEGACY",
-      title: "原声编年史",
-      subtitle: "五部独立交响乐章，记录克雷格版邦德的情感碎裂与宿命升华。",
-      headers: {
-        year: "年份",
-        track: "曲目 / 音乐人",
-        film: "所属电影",
-        critique: "策展短评"
-      },
-      playAria: "试听曲目",
-      pauseAria: "暂停曲目"
     },
 
     curtainCall: {
       quote: "“We have all the time in the world.”",
-      quoteTranslation: "我们拥有世间所有的时间",
-      eraMark: "2006 — 2021 · FIN",
       backToTopAria: "返回页面顶部",
-      credit: "CURATED BY HN STUDIO"
+      tributeMain: "他将不朽神话，塑为有血有肉的凡人。",
+      tributeCredit: "致敬丹尼尔·克雷格 · 2006 — 2021",
+      willReturn: "JAMES BOND WILL RETURN",
+      hnStudioWordmark: "STUDIO",
+      hnStudioSub: "DIGITAL ATELIER",
+      hnReturnHint: "ESC / 点击空白处返回",
+      hnCloseAria: "关闭 HN Studio 签名"
     },
 
     // ------------------------------------------
@@ -225,7 +207,7 @@ const SITE_DATA = {
         aspectRatio: "1 / 1",
         interactionType: "bezel",
         hotspots: [
-          { id: "omega-bezel", x: 50.0, y: 21.5, label: "单向旋转潜水表圈 · 拖拽或点击拨动", align: "right", role: "bezel" },
+          { id: "omega-bezel", x: 50.0, y: 21.5, label: "单向旋转潜水表圈", align: "right", role: "bezel" },
           { id: "omega-calibre", x: 50.0, y: 58.5, label: "英军宽箭头刻印 · 8806 至臻天文台", align: "right" },
           { id: "omega-hev", x: 21.0, y: 32.0, label: "10 点位排氦阀门 · 2 级钛金属", align: "right" }
         ]
@@ -256,57 +238,6 @@ const SITE_DATA = {
           { id: "ppk-safety", x: 69.5, y: 16.0, label: "单/双动保险与击锤解脱杆", align: "left" },
           { id: "ppk-slide", x: 26.0, y: 16.0, label: "7.65×17mm 勃朗宁短弹 · 烤蓝钢套筒", align: "right" }
         ]
-      }
-    ],
-
-    // ------------------------------------------
-    // 原声编年史 (极简短评 + 音频路径)
-    // ------------------------------------------
-    soundtracks: [
-      {
-        year: 2006,
-        track: "You Know My Name",
-        artist: "Chris Cornell",
-        film: "Casino Royale",
-        filmZh: "大战皇家赌场",
-        audioSrc: "assets/theme-1.mp3",
-        critique: "粗砺狂暴的硬摇滚重击，宣告一个肉身会流血的现代 007 破茧而生。"
-      },
-      {
-        year: 2008,
-        track: "Another Way to Die",
-        artist: "Jack White & Alicia Keys",
-        film: "Quantum of Solace",
-        filmZh: "大破量子危机",
-        audioSrc: "assets/theme-2.mp3",
-        critique: "失真吉他与尖锐管乐厮杀，映照在复仇熔炉中分崩离析的灵魂。"
-      },
-      {
-        year: 2012,
-        track: "Skyfall",
-        artist: "Adele",
-        film: "Skyfall",
-        filmZh: "大破天幕杀机",
-        audioSrc: "assets/theme-3.mp3",
-        critique: "深沉铜管与悲怆弦乐交织，献给旧时代残晖的壮丽帝国挽歌。"
-      },
-      {
-        year: 2015,
-        track: "Writing's on the Wall",
-        artist: "Sam Smith",
-        film: "Spectre",
-        filmZh: "幽灵党",
-        audioSrc: "assets/theme-4.mp3",
-        critique: "脆弱假音盘旋于宏大管弦之上，展露强硬外壳下的孤寂战栗。"
-      },
-      {
-        year: 2021,
-        track: "No Time to Die",
-        artist: "Billie Eilish & Finneas",
-        film: "No Time to Die",
-        filmZh: "无暇赴死",
-        audioSrc: "assets/theme-5.mp3",
-        critique: "低语沉寂汇入汉斯·季默的悲壮交响，奏响战士的终极安魂曲。"
       }
     ]
   },
@@ -354,38 +285,20 @@ const SITE_DATA = {
       title: "AESTHETIC ARTIFACTS",
       ui: {
         bezelPrefix: "BEZEL",
-        bezelUnit: "MIN",
-        db5CueOff: "Click chassis to ignite halogen lamps",
-        db5CueOn: "Headlamps illuminated · Click to extinguish",
-        ppkLocked: "Biometric lock engaged · Hold or click grip",
-        ppkScanning: "Scanning dermal palm print…",
-        ppkUnlocked: "007 Biometrics Authorized · Click grip to lock",
-        omegaCue: "Drag counter-clockwise or click bezel to rotate",
-        tailoringCue: "Inspect weave at 2.1× via Savile Row optical loupe"
+        bezelUnit: "MIN"
       }
-    },
-
-    soundtracksSection: {
-      sectionIndex: "02",
-      sectionCategory: "THE SONIC LEGACY",
-      title: "THE SONIC LEGACY",
-      subtitle: "Five distinct orchestral overtures charting the emotional fracture and mythic elevation of Bond.",
-      headers: {
-        year: "YEAR",
-        track: "TRACK / ARTIST",
-        film: "FILM",
-        critique: "CURATORIAL NOTE"
-      },
-      playAria: "Preview track",
-      pauseAria: "Pause track"
     },
 
     curtainCall: {
       quote: "“We have all the time in the world.”",
-      quoteTranslation: "",
-      eraMark: "2006 — 2021 · FIN",
       backToTopAria: "Return to top",
-      credit: "CURATED BY HN STUDIO"
+      tributeMain: "He turned an immortal myth into a mortal man.",
+      tributeCredit: "FOR DANIEL CRAIG · 2006 — 2021",
+      willReturn: "JAMES BOND WILL RETURN",
+      hnStudioWordmark: "STUDIO",
+      hnStudioSub: "DIGITAL ATELIER",
+      hnReturnHint: "ESC / CLICK TO RETURN",
+      hnCloseAria: "Close HN Studio signature"
     },
 
     // ------------------------------------------
@@ -529,7 +442,7 @@ const SITE_DATA = {
         aspectRatio: "1 / 1",
         interactionType: "bezel",
         hotspots: [
-          { id: "omega-bezel", x: 50.0, y: 21.5, label: "Unidirectional Bezel · Drag or Click", align: "right", role: "bezel" },
+          { id: "omega-bezel", x: 50.0, y: 21.5, label: "Unidirectional Rotating Bezel", align: "right", role: "bezel" },
           { id: "omega-calibre", x: 50.0, y: 58.5, label: "Broad Arrow · Co-Axial Calibre 8806", align: "right" },
           { id: "omega-hev", x: 21.0, y: 32.0, label: "Helium Escape Valve · Grade 2 Titanium", align: "right" }
         ]
@@ -560,57 +473,6 @@ const SITE_DATA = {
           { id: "ppk-safety", x: 69.5, y: 16.0, label: "Slide-Mounted Safety & Decocker", align: "left" },
           { id: "ppk-slide", x: 26.0, y: 16.0, label: "7.65mm Browning · Blued Steel Slide", align: "right" }
         ]
-      }
-    ],
-
-    // ------------------------------------------
-    // The Sonic Legacy
-    // ------------------------------------------
-    soundtracks: [
-      {
-        year: 2006,
-        track: "You Know My Name",
-        artist: "Chris Cornell",
-        film: "Casino Royale",
-        filmZh: "Casino Royale",
-        audioSrc: "assets/theme-1.mp3",
-        critique: "Muscular hard-rock overture introducing a 007 who bleeds."
-      },
-      {
-        year: 2008,
-        track: "Another Way to Die",
-        artist: "Jack White & Alicia Keys",
-        film: "Quantum of Solace",
-        filmZh: "Quantum of Solace",
-        audioSrc: "assets/theme-2.mp3",
-        critique: "Fuzz-driven duel mirroring an operative unraveling in grief."
-      },
-      {
-        year: 2012,
-        track: "Skyfall",
-        artist: "Adele",
-        film: "Skyfall",
-        filmZh: "Skyfall",
-        audioSrc: "assets/theme-3.mp3",
-        critique: "Velvet brass and mournful strings celebrating ancient dignity."
-      },
-      {
-        year: 2015,
-        track: "Writing's on the Wall",
-        artist: "Sam Smith",
-        film: "Spectre",
-        filmZh: "Spectre",
-        audioSrc: "assets/theme-4.mp3",
-        critique: "Fragile falsetto drifting over shadows of a lifelong web."
-      },
-      {
-        year: 2021,
-        track: "No Time to Die",
-        artist: "Billie Eilish & Finneas",
-        film: "No Time to Die",
-        filmZh: "No Time to Die",
-        audioSrc: "assets/theme-5.mp3",
-        critique: "Whispered restraint swelling into Hans Zimmer's final requiem."
       }
     ]
   }

@@ -45,9 +45,7 @@
   let lastWindowWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
   let resizeTimerId = null;
   let artifactsRevealed = false;
-  let soundtracksRevealed = false;
   let artifactsObserver = null;
-  let soundtracksObserver = null;
 
   // Dual-deck scroll-synced ambient audio engine + unified master volume
   const deckA = typeof Audio !== 'undefined' ? new Audio() : null;
@@ -68,19 +66,34 @@
   let pendingAutoplayUnlock = false;
   let unlockListenersBound = false;
   let inStageAudioZone = true;
+  let inEpilogueZone = false;
   let activeAmbientDeck = deckA;
   let ambientTrackIndex = -1;
   let crossfadeRafId = null;
 
-  // Single manual preview player for Sonic Legacy section
-  const manualAudio = typeof Audio !== 'undefined' ? new Audio() : null;
-  if (manualAudio) {
-    manualAudio.preload = 'none';
-    manualAudio.volume = DEFAULT_MASTER_VOLUME;
-  }
-  let activeManualTrackIndex = -1;
-  let isManualPlaying = false;
-  let manualProgressPct = 0;
+  // Silent Film Epilogue & 007 -> HN STUDIO Morph State
+  const EPILOGUE_AUDIO_FADE_MS = 1800;
+  const MORPH_PATHS_007 = [
+    'M 96 22 C 81 22 72 39 72 60 C 72 81 81 98 96 98',
+    'M 96 22 C 111 22 120 39 120 60 C 120 81 111 98 96 98',
+    'M 180 22 C 165 22 156 39 156 60 C 156 81 165 98 180 98',
+    'M 180 22 C 195 22 204 39 204 60 C 204 81 195 98 180 98',
+    'M 236 22 C 253 22 271 22 288 22 C 273 47 259 73 244 98'
+  ];
+  const MORPH_PATHS_HN = [
+    'M 118 22 C 118 35 118 47 118 60 C 118 73 118 85 118 98',
+    'M 118 60 C 126 60 134 60 142 60 C 150 60 158 60 166 60',
+    'M 166 22 C 166 35 166 47 166 60 C 166 73 166 85 166 98',
+    'M 194 22 C 194 35 194 47 194 60 C 194 73 194 85 194 98',
+    'M 194 22 C 210 47 226 73 242 98 C 242 73 242 47 242 22'
+  ];
+  let epilogueObserver = null;
+  let epilogueCreditsStarted = false;
+  let epilogueCreditsPlayed = false;
+  let epilogueTimeline = null;
+  let epilogueMorphTimeline = null;
+  let epilogueSfxTimers = [];
+  let isHnMorphOpen = false;
 
   // Interactive Darkroom Exhibit State (persists across bilingual re-renders)
   const gearState = {
@@ -113,6 +126,7 @@
     mainContent: document.getElementById('main-content'),
 
     // Nav
+    navHeader: document.querySelector('.site-header'),
     navHomeBtn: document.getElementById('nav-home-btn'),
     masterAudioControl: document.getElementById('master-audio-control'),
     soundToggleBtn: document.getElementById('global-sound-btn'),
@@ -166,19 +180,25 @@
     artifactsTitle: document.getElementById('artifacts-title'),
     artifactsGridContainer: document.getElementById('artifacts-grid-container'),
 
-    // Soundtracks Section
-    soundtracksSectionIdx: document.getElementById('soundtracks-section-idx'),
-    soundtracksSectionCat: document.getElementById('soundtracks-section-cat'),
-    soundtracksTitle: document.getElementById('soundtracks-title'),
-    soundtracksSubtitle: document.getElementById('soundtracks-subtitle'),
-    soundtracksContainer: document.getElementById('soundtracks-container'),
-
-    // Curtain Call Footer
+    // Epilogue Stage & 007 -> HN STUDIO Morph
+    epilogueStage: document.getElementById('epilogue-stage'),
+    epilogueTribute: document.getElementById('epilogue-tribute'),
+    epilogueTributeMain: document.getElementById('epilogue-tribute-main'),
+    epilogueTributeCredit: document.getElementById('epilogue-tribute-credit'),
+    epilogueReturn: document.getElementById('epilogue-return'),
+    epilogueReturnText: document.getElementById('epilogue-return-text'),
+    epilogueFinal: document.getElementById('epilogue-final'),
     curtainQuote: document.getElementById('curtain-quote'),
-    curtainQuoteZh: document.getElementById('curtain-quote-zh'),
-    curtainEraMark: document.getElementById('curtain-era-mark'),
-    curtainCredit: document.getElementById('curtain-credit'),
-    backToTopBtn: document.getElementById('back-to-top')
+    epilogueHnTrigger: document.getElementById('epilogue-hn-trigger'),
+    hnMorphStage: document.getElementById('hn-morph-stage'),
+    hnMorphClose: document.getElementById('hn-morph-close'),
+    hnMorphSvg: document.getElementById('hn-morph-svg'),
+    hnMorphPaths: document.querySelectorAll('.hn-morph-path'),
+    hnMorphStrokesSheen: document.getElementById('hn-morph-strokes-sheen'),
+    hnSheenMaskRect: document.getElementById('hn-sheen-mask-rect'),
+    hnMorphWordmark: document.getElementById('hn-morph-wordmark'),
+    hnMorphSubmark: document.getElementById('hn-morph-submark'),
+    hnMorphHint: document.getElementById('hn-morph-hint')
   };
 
   // ==========================================
@@ -221,22 +241,30 @@
     if (DOM.artifactsSectionCat) DOM.artifactsSectionCat.textContent = data.artifactsSection.sectionCategory;
     if (DOM.artifactsTitle) DOM.artifactsTitle.textContent = data.artifactsSection.title;
 
-    // Soundtracks Section Headers
-    if (DOM.soundtracksSectionIdx) DOM.soundtracksSectionIdx.textContent = data.soundtracksSection.sectionIndex;
-    if (DOM.soundtracksSectionCat) DOM.soundtracksSectionCat.textContent = data.soundtracksSection.sectionCategory;
-    if (DOM.soundtracksTitle) DOM.soundtracksTitle.textContent = data.soundtracksSection.title;
-    if (DOM.soundtracksSubtitle) DOM.soundtracksSubtitle.textContent = data.soundtracksSection.subtitle;
-
-    // Curtain Call Footer
+    // Silent Film Epilogue & HN Studio Easter Egg Copy
     if (data.curtainCall) {
-      if (DOM.curtainQuote) DOM.curtainQuote.textContent = data.curtainCall.quote;
-      if (DOM.curtainQuoteZh) {
-        DOM.curtainQuoteZh.textContent = data.curtainCall.quoteTranslation || '';
-        DOM.curtainQuoteZh.style.display = data.curtainCall.quoteTranslation ? 'block' : 'none';
+      if (DOM.epilogueTributeMain && data.curtainCall.tributeMain) {
+        DOM.epilogueTributeMain.textContent = data.curtainCall.tributeMain;
       }
-      if (DOM.curtainEraMark) DOM.curtainEraMark.textContent = data.curtainCall.eraMark;
-      if (DOM.curtainCredit) DOM.curtainCredit.textContent = data.curtainCall.credit;
-      if (DOM.backToTopBtn) DOM.backToTopBtn.setAttribute('aria-label', data.curtainCall.backToTopAria);
+      if (DOM.epilogueTributeCredit && data.curtainCall.tributeCredit) {
+        DOM.epilogueTributeCredit.textContent = data.curtainCall.tributeCredit;
+      }
+      if (DOM.epilogueReturnText && data.curtainCall.willReturn) {
+        DOM.epilogueReturnText.textContent = data.curtainCall.willReturn;
+      }
+      if (DOM.curtainQuote) DOM.curtainQuote.textContent = data.curtainCall.quote;
+      if (DOM.hnMorphWordmark && data.curtainCall.hnStudioWordmark) {
+        DOM.hnMorphWordmark.textContent = data.curtainCall.hnStudioWordmark;
+      }
+      if (DOM.hnMorphSubmark && data.curtainCall.hnStudioSub) {
+        DOM.hnMorphSubmark.textContent = data.curtainCall.hnStudioSub;
+      }
+      if (DOM.hnMorphHint && data.curtainCall.hnReturnHint) {
+        DOM.hnMorphHint.textContent = data.curtainCall.hnReturnHint;
+      }
+      if (DOM.hnMorphClose && data.curtainCall.hnCloseAria) {
+        DOM.hnMorphClose.setAttribute('aria-label', data.curtainCall.hnCloseAria);
+      }
     }
   }
 
@@ -291,7 +319,7 @@
   }
 
   function getGearSfxGain() {
-    if (!ambientEnabled && !isManualPlaying && !pendingAutoplayUnlock) return 0;
+    if (!ambientEnabled && !pendingAutoplayUnlock) return 0;
     return Math.min(1, Math.max(0.2, masterVolume)) * 0.45;
   }
 
@@ -543,18 +571,6 @@
     }
   };
 
-  function getGearStatusText(itemId, ui) {
-    if (!ui) return '';
-    if (itemId === 'db5') return gearState.db5LightsOn ? ui.db5CueOn : ui.db5CueOff;
-    if (itemId === 'omega') return ui.omegaCue;
-    if (itemId === 'tailoring') return ui.tailoringCue;
-    if (itemId === 'walther') {
-      if (gearState.ppkScanning) return ui.ppkScanning;
-      return gearState.ppkUnlocked ? ui.ppkUnlocked : ui.ppkLocked;
-    }
-    return '';
-  }
-
   function formatBezelReadout(angleDeg, ui) {
     const absDeg = Math.abs(angleDeg % 360);
     const mins = Math.round(absDeg / 6) % 60;
@@ -577,7 +593,6 @@
       const isFocused = gearState.focusedId === item.id ? 'is-focused' : '';
       const isLightsOn = (item.id === 'db5' && gearState.db5LightsOn) ? 'is-lights-on' : '';
       const isUnlocked = (item.id === 'walther' && gearState.ppkUnlocked) ? 'is-unlocked' : '';
-      const statusCue = getGearStatusText(item.id, ui);
 
       let extraMediaHtml = '';
       if (item.id === 'db5') {
@@ -654,7 +669,6 @@
           </div>
           <div class="gear-meta-bar">
             <h3 class="gear-title">${escapeHTML(displayName)}</h3>
-            <span class="gear-status-cue">${escapeHTML(statusCue)}</span>
           </div>
         </article>
       `;
@@ -688,12 +702,6 @@
       });
     };
 
-    const updateGearCue = (itemEl, text) => {
-      if (!itemEl) return;
-      const cue = itemEl.querySelector('.gear-status-cue');
-      if (cue) cue.textContent = text;
-    };
-
     const cancelPpkHoverTimer = () => {
       if (gearState.ppkHoverTimer) {
         clearTimeout(gearState.ppkHoverTimer);
@@ -703,18 +711,15 @@
 
     const triggerPpkBiometricSequence = (itemEl) => {
       if (!itemEl || gearState.ppkScanning) return;
-      const ui = getCurrentUiStrings();
 
       if (gearState.ppkUnlocked) {
         gearState.ppkUnlocked = false;
         itemEl.classList.remove('is-unlocked');
-        updateGearCue(itemEl, ui.ppkLocked || '');
         return;
       }
 
       gearState.ppkScanning = true;
       itemEl.classList.add('is-scanning');
-      updateGearCue(itemEl, ui.ppkScanning || '');
       GearSFX.playSafetyUnlock();
 
       if (gearState.ppkScanTimer) clearTimeout(gearState.ppkScanTimer);
@@ -726,7 +731,6 @@
         if (latestWalther) {
           latestWalther.classList.remove('is-scanning');
           latestWalther.classList.add('is-unlocked');
-          updateGearCue(latestWalther, getCurrentUiStrings().ppkUnlocked || '');
         }
       }, 420);
     };
@@ -934,7 +938,6 @@
           // Clicking DB5 M134/plate/hood also ignites headlights naturally
           gearState.db5LightsOn = !gearState.db5LightsOn;
           item.classList.toggle('is-lights-on', gearState.db5LightsOn);
-          updateGearCue(item, getGearStatusText('db5', getCurrentUiStrings()));
           GearSFX.playToggleSwitch();
         }
         return;
@@ -949,7 +952,6 @@
       if (gearId === 'db5') {
         gearState.db5LightsOn = !gearState.db5LightsOn;
         item.classList.toggle('is-lights-on', gearState.db5LightsOn);
-        updateGearCue(item, getGearStatusText('db5', getCurrentUiStrings()));
         GearSFX.playToggleSwitch();
       } else if (gearId === 'omega') {
         // Click dial/bezel advances -18deg counter-clockwise (3 clicks = 3 minutes)
@@ -982,77 +984,9 @@
     });
   }
 
-  function renderSoundtrackCatalog(soundtracks, sectionData, lang) {
-    if (!DOM.soundtracksContainer || !Array.isArray(soundtracks)) return;
-
-    const headers = sectionData.headers;
-    const headerRowHtml = `
-      <div class="soundtrack-header-row" aria-hidden="true">
-        <span>${escapeHTML(headers.year)}</span>
-        <span>${escapeHTML(headers.track)}</span>
-        <span>${escapeHTML(headers.film)}</span>
-        <span>${escapeHTML(headers.critique)}</span>
-        <span></span>
-      </div>
-    `;
-
-    const revealClass = soundtracksRevealed ? 'reveal-item is-revealed' : 'reveal-item';
-
-    const rowsHtml = soundtracks.map((track, idx) => {
-      const displayFilm = lang === 'zh' ? track.filmZh : track.film;
-      const isRowPlaying = isManualPlaying && idx === activeManualTrackIndex;
-      const playingClass = isRowPlaying ? 'is-playing' : '';
-      const ariaAction = isRowPlaying ? sectionData.pauseAria : sectionData.playAria;
-      const progressWidth = isRowPlaying ? manualProgressPct : 0;
-
-      return `
-        <div class="soundtrack-row ${revealClass} ${playingClass}"
-             data-year="${track.year}"
-             data-track-index="${idx}"
-             data-audio-src="${escapeHTML(track.audioSrc || '')}"
-             role="button"
-             tabindex="0"
-             aria-pressed="${isRowPlaying ? 'true' : 'false'}"
-             aria-label="${escapeHTML(ariaAction)}: ${escapeHTML(track.track)}">
-          <div class="track-year">${track.year}</div>
-          <div class="track-title-group">
-            <div class="track-name">"${escapeHTML(track.track)}"</div>
-            <div class="track-artist">${escapeHTML(track.artist)}</div>
-          </div>
-          <div class="track-film">
-            <span>${escapeHTML(displayFilm)}</span>
-            <span class="track-film-sub">${track.year}</span>
-          </div>
-          <div class="track-critique">${escapeHTML(track.critique)}</div>
-          <div class="track-audio-ctrl" aria-hidden="true">
-            <svg class="icon-play-svg" viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
-              <polygon points="3.5,2 13.5,8 3.5,14"></polygon>
-            </svg>
-            <svg class="eq-bars-svg" viewBox="0 0 20 14" width="20" height="14" fill="currentColor">
-              <rect class="eq-bar eq-bar-1" x="1" y="2" width="2.2" height="12"></rect>
-              <rect class="eq-bar eq-bar-2" x="6" y="2" width="2.2" height="12"></rect>
-              <rect class="eq-bar eq-bar-3" x="11" y="2" width="2.2" height="12"></rect>
-              <rect class="eq-bar eq-bar-4" x="16" y="2" width="2.2" height="12"></rect>
-            </svg>
-            <svg class="icon-pause-svg" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-              <rect x="3" y="2.5" width="3" height="11"></rect>
-              <rect x="10" y="2.5" width="3" height="11"></rect>
-            </svg>
-          </div>
-          <div class="track-progress-bar" aria-hidden="true">
-            <div class="track-progress-fill" style="width: ${progressWidth.toFixed(2)}%;"></div>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    DOM.soundtracksContainer.innerHTML = headerRowHtml + rowsHtml;
-  }
-
   function initScrollReveals() {
     if (prefersReducedMotion || !('IntersectionObserver' in window)) {
       artifactsRevealed = true;
-      soundtracksRevealed = true;
       document.querySelectorAll('.reveal-item').forEach(el => el.classList.add('is-revealed'));
       return;
     }
@@ -1074,25 +1008,6 @@
         });
       }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
       artifactsObserver.observe(DOM.artifactsGridContainer);
-    }
-
-    if (DOM.soundtracksContainer && !soundtracksRevealed) {
-      if (soundtracksObserver) soundtracksObserver.disconnect();
-      soundtracksObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            soundtracksRevealed = true;
-            const rows = DOM.soundtracksContainer.querySelectorAll('.soundtrack-row');
-            rows.forEach((row, idx) => {
-              setTimeout(() => {
-                row.classList.add('is-revealed');
-              }, idx * 80);
-            });
-            soundtracksObserver.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.10, rootMargin: '0px 0px -40px 0px' });
-      soundtracksObserver.observe(DOM.soundtracksContainer);
     }
   }
 
@@ -1122,14 +1037,13 @@
   }
 
   // ==========================================
-  // 5. DUAL-DECK SCROLL CROSSFADE & MANUAL AUDIO ENGINE
+  // 5. DUAL-DECK SCROLL CROSSFADE AMBIENT AUDIO ENGINE
   // ==========================================
 
   function applyMasterVolume() {
     const safeVol = Math.min(1, Math.max(0.2, masterVolume));
     if (deckA) deckA.volume = Math.min(1, Math.max(0, deckALogicalGain * safeVol));
     if (deckB) deckB.volume = Math.min(1, Math.max(0, deckBLogicalGain * safeVol));
-    if (manualAudio) manualAudio.volume = safeVol;
   }
 
   function updateGainMeterUI() {
@@ -1157,7 +1071,7 @@
     applyMasterVolume();
     updateGainMeterUI();
 
-    if (unmuteIfSilent && !ambientEnabled && !isManualPlaying) {
+    if (unmuteIfSilent && !ambientEnabled) {
       toggleAmbientSound();
     }
   }
@@ -1181,12 +1095,12 @@
     const data = siteData[currentLang];
     if (!data || !data.nav) return;
     const isActivelyOn = ambientEnabled && !pendingAutoplayUnlock;
-    const isStandby = pendingAutoplayUnlock && !isManualPlaying;
+    const isStandby = pendingAutoplayUnlock;
 
     if (DOM.masterAudioControl) {
       DOM.masterAudioControl.classList.toggle('is-sound-on', isActivelyOn);
       DOM.masterAudioControl.classList.toggle('is-sound-standby', isStandby);
-      DOM.masterAudioControl.classList.toggle('is-active', isActivelyOn || isManualPlaying || isStandby);
+      DOM.masterAudioControl.classList.toggle('is-active', isActivelyOn || isStandby);
     }
     if (DOM.soundToggleBtn) {
       DOM.soundToggleBtn.classList.toggle('is-sound-on', isActivelyOn);
@@ -1224,18 +1138,12 @@
       if (target.closest('#global-sound-btn')) {
         return;
       }
-      // If user clicked a manual bottom track row, yield standby to manual playback
-      if (target.closest('.soundtrack-row')) {
-        clearPendingAutoplayUnlock();
-        updateSoundToggleUI();
-        return;
-      }
     }
 
     clearPendingAutoplayUnlock();
     ambientEnabled = true;
     updateSoundToggleUI();
-    if (inStageAudioZone && !isManualPlaying) {
+    if (inStageAudioZone && !inEpilogueZone) {
       crossfadeAmbientToAct(currentActIndex, INITIAL_AUDIO_FADE_MS);
     }
   }
@@ -1249,10 +1157,11 @@
   }
 
   /**
-   * Cancel any active rAF crossfade and ramp/stop ambient decks smoothly
+   * Cancel any active rAF crossfade and ramp/stop ambient decks linearly
    * @param {boolean} immediate - true to immediately silence & pause both decks
+   * @param {number} durationMs - linear fade-out duration in milliseconds
    */
-  function fadeOutAmbientDecks(immediate = false) {
+  function fadeOutAmbientDecks(immediate = false, durationMs = 750) {
     if (crossfadeRafId) {
       cancelAnimationFrame(crossfadeRafId);
       crossfadeRafId = null;
@@ -1279,7 +1188,7 @@
     }
 
     const startTime = performance.now();
-    const fadeDuration = 750;
+    const fadeDuration = Math.max(100, durationMs);
 
     function step(now) {
       const t = Math.min(1, (now - startTime) / fadeDuration);
@@ -1309,8 +1218,7 @@
    * @param {number} durationMs
    */
   function crossfadeAmbientToAct(targetActIdx, durationMs = CROSSFADE_DURATION_MS) {
-    if (!ambientEnabled || !inStageAudioZone || !deckA || !deckB) return;
-    if (isManualPlaying) return;
+    if (!ambientEnabled || !inStageAudioZone || inEpilogueZone || !deckA || !deckB) return;
 
     const films = siteData.zh && siteData.zh.films;
     const film = films && films[targetActIdx];
@@ -1419,166 +1327,14 @@
       ambientEnabled = !ambientEnabled;
     }
     if (ambientEnabled) {
-      // Stop any manual soundtrack in Sonic Legacy to guarantee single audio source
-      stopManualAudio();
       updateSoundToggleUI();
-      if (inStageAudioZone) {
+      if (inStageAudioZone && !inEpilogueZone) {
         crossfadeAmbientToAct(currentActIndex, INITIAL_AUDIO_FADE_MS);
       }
     } else {
       updateSoundToggleUI();
       fadeOutAmbientDecks(false);
     }
-  }
-
-  function syncAudioRowsUI(resetAllProgress = false) {
-    if (!DOM.soundtracksContainer) return;
-    const data = siteData[currentLang];
-    const sData = data ? data.soundtracksSection : { playAria: 'Preview', pauseAria: 'Pause' };
-    const rows = DOM.soundtracksContainer.querySelectorAll('.soundtrack-row');
-
-    rows.forEach((row) => {
-      const idx = parseInt(row.getAttribute('data-track-index'), 10);
-      const isRowPlaying = isManualPlaying && idx === activeManualTrackIndex;
-
-      row.classList.toggle('is-playing', isRowPlaying);
-      row.setAttribute('aria-pressed', isRowPlaying ? 'true' : 'false');
-
-      const trackObj = data && data.soundtracks ? data.soundtracks[idx] : null;
-      const trackTitle = trackObj ? trackObj.track : '';
-      const actionLabel = isRowPlaying ? sData.pauseAria : sData.playAria;
-      row.setAttribute('aria-label', `${actionLabel}: ${trackTitle}`);
-
-      if (resetAllProgress || idx !== activeManualTrackIndex) {
-        const fillEl = row.querySelector('.track-progress-fill');
-        if (fillEl) fillEl.style.width = '0%';
-      }
-    });
-
-    if (DOM.masterAudioControl) {
-      DOM.masterAudioControl.classList.toggle('is-active', ambientEnabled || isManualPlaying);
-    }
-  }
-
-  function stopManualAudio() {
-    if (!manualAudio) return;
-    manualAudio.pause();
-    isManualPlaying = false;
-    activeManualTrackIndex = -1;
-    manualProgressPct = 0;
-    syncAudioRowsUI(true);
-  }
-
-  function handleTrackRowToggle(row) {
-    if (!row || !manualAudio) return;
-
-    const idx = parseInt(row.getAttribute('data-track-index'), 10);
-    const src = row.getAttribute('data-audio-src');
-    if (isNaN(idx) || !src) return;
-
-    // Immediately yield ambient scroll-synced sound & cancel standby if active (never two tracks simultaneously)
-    if (pendingAutoplayUnlock) {
-      clearPendingAutoplayUnlock();
-    }
-    if (ambientEnabled) {
-      ambientEnabled = false;
-      updateSoundToggleUI();
-      fadeOutAmbientDecks(true);
-    } else {
-      updateSoundToggleUI();
-    }
-
-    if (idx === activeManualTrackIndex && isManualPlaying) {
-      manualAudio.pause();
-      isManualPlaying = false;
-      syncAudioRowsUI(false);
-      return;
-    }
-
-    if (idx === activeManualTrackIndex && !isManualPlaying) {
-      isManualPlaying = true;
-      manualAudio.volume = Math.min(1, Math.max(0.2, masterVolume));
-      syncAudioRowsUI(false);
-      const playPromise = manualAudio.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch((err) => {
-          if (err && err.name !== 'AbortError') {
-            isManualPlaying = false;
-            syncAudioRowsUI(false);
-          }
-        });
-      }
-      return;
-    }
-
-    manualAudio.pause();
-    manualProgressPct = 0;
-    activeManualTrackIndex = idx;
-    isManualPlaying = true;
-    manualAudio.src = src;
-    manualAudio.currentTime = 0;
-    manualAudio.volume = Math.min(1, Math.max(0.2, masterVolume));
-    syncAudioRowsUI(true);
-
-    const playPromise = manualAudio.play();
-    if (playPromise && typeof playPromise.catch === 'function') {
-      playPromise.catch((err) => {
-        if (err && err.name !== 'AbortError') {
-          isManualPlaying = false;
-          activeManualTrackIndex = -1;
-          manualProgressPct = 0;
-          syncAudioRowsUI(true);
-        }
-      });
-    }
-  }
-
-  function initAudioPlayer() {
-    if (DOM.soundtracksContainer) {
-      DOM.soundtracksContainer.addEventListener('click', (e) => {
-        const row = e.target && e.target.closest ? e.target.closest('.soundtrack-row') : null;
-        if (row) handleTrackRowToggle(row);
-      });
-
-      DOM.soundtracksContainer.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          const row = e.target && e.target.closest ? e.target.closest('.soundtrack-row') : null;
-          if (row) {
-            e.preventDefault();
-            handleTrackRowToggle(row);
-          }
-        }
-      });
-    }
-
-    if (!manualAudio) return;
-
-    manualAudio.addEventListener('timeupdate', () => {
-      if (!isManualPlaying || activeManualTrackIndex < 0 || !DOM.soundtracksContainer) return;
-      if (manualAudio.duration > 0 && isFinite(manualAudio.duration)) {
-        manualProgressPct = Math.min(100, Math.max(0, (manualAudio.currentTime / manualAudio.duration) * 100));
-        const activeRow = DOM.soundtracksContainer.querySelector(`.soundtrack-row[data-track-index="${activeManualTrackIndex}"]`);
-        const fillEl = activeRow ? activeRow.querySelector('.track-progress-fill') : null;
-        if (fillEl) {
-          fillEl.style.width = `${manualProgressPct.toFixed(2)}%`;
-        }
-      }
-    });
-
-    manualAudio.addEventListener('ended', () => {
-      isManualPlaying = false;
-      activeManualTrackIndex = -1;
-      manualProgressPct = 0;
-      manualAudio.currentTime = 0;
-      syncAudioRowsUI(true);
-    });
-
-    manualAudio.addEventListener('error', () => {
-      isManualPlaying = false;
-      activeManualTrackIndex = -1;
-      manualProgressPct = 0;
-      syncAudioRowsUI(true);
-    });
   }
 
   // ==========================================
@@ -1775,9 +1531,454 @@
       currentActIndex = newActIndex;
       setActiveAct(currentActIndex);
 
-      if (ambientEnabled && inStageAudioZone) {
+      if (ambientEnabled && inStageAudioZone && !inEpilogueZone) {
         crossfadeAmbientToAct(currentActIndex);
       }
+    }
+  }
+
+  // ==========================================
+  // 6B. SILENT FILM EPILOGUE & 007 -> HN STUDIO MORPH EASTER EGG
+  // ==========================================
+
+  function clearEpilogueSfxTimers() {
+    epilogueSfxTimers.forEach((tid) => clearTimeout(tid));
+    epilogueSfxTimers = [];
+  }
+
+  function resetHnMorphPathsTo007() {
+    if (!DOM.hnMorphPaths) return;
+    DOM.hnMorphPaths.forEach((pathEl, idx) => {
+      if (MORPH_PATHS_007[idx]) {
+        pathEl.setAttribute('d', MORPH_PATHS_007[idx]);
+      }
+    });
+  }
+
+  function isEpilogueMajorityVisible() {
+    if (!DOM.epilogueStage || typeof DOM.epilogueStage.getBoundingClientRect !== 'function') return false;
+    const rect = DOM.epilogueStage.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+    if (vh <= 0 || rect.height <= 0) return false;
+    const visibleHeight = Math.max(0, Math.min(rect.bottom, vh) - Math.max(rect.top, 0));
+    const denominator = Math.min(rect.height, vh);
+    return denominator > 0 && (visibleHeight / denominator) >= 0.55;
+  }
+
+  function fastForwardEpilogueToEnd(immediate = false) {
+    epilogueCreditsStarted = true;
+    epilogueCreditsPlayed = true;
+
+    if (epilogueTimeline) {
+      epilogueTimeline.kill();
+      epilogueTimeline = null;
+    }
+
+    if (DOM.epilogueStage) {
+      DOM.epilogueStage.classList.remove('is-credits-playing');
+    }
+
+    const revealFinalInteractive = () => {
+      if (DOM.epilogueFinal) DOM.epilogueFinal.classList.add('is-interactive');
+      if (DOM.epilogueHnTrigger) DOM.epilogueHnTrigger.classList.add('is-ready');
+    };
+
+    if (immediate || prefersReducedMotion || typeof gsap === 'undefined') {
+      if (DOM.epilogueTribute) {
+        DOM.epilogueTribute.style.opacity = '0';
+        DOM.epilogueTribute.style.visibility = 'hidden';
+      }
+      if (DOM.epilogueReturn) {
+        DOM.epilogueReturn.style.opacity = '0';
+        DOM.epilogueReturn.style.visibility = 'hidden';
+      }
+      if (DOM.epilogueFinal) {
+        DOM.epilogueFinal.style.opacity = '1';
+        DOM.epilogueFinal.style.visibility = 'visible';
+        DOM.epilogueFinal.style.transform = '';
+      }
+      revealFinalInteractive();
+      return;
+    }
+
+    if (DOM.epilogueTribute || DOM.epilogueReturn) {
+      gsap.to([DOM.epilogueTribute, DOM.epilogueReturn].filter(Boolean), {
+        autoAlpha: 0,
+        duration: 0.25,
+        overwrite: true
+      });
+    }
+    if (DOM.epilogueFinal) {
+      gsap.to(DOM.epilogueFinal, {
+        autoAlpha: 1,
+        y: 0,
+        scale: 1,
+        filter: 'blur(0px)',
+        duration: 0.5,
+        ease: 'power2.out',
+        overwrite: true,
+        onComplete: revealFinalInteractive
+      });
+    } else {
+      revealFinalInteractive();
+    }
+  }
+
+  function startEpilogueCredits() {
+    if (!DOM.epilogueStage) return;
+
+    if (epilogueCreditsPlayed || epilogueCreditsStarted) {
+      if (!epilogueCreditsPlayed) {
+        fastForwardEpilogueToEnd(true);
+      }
+      return;
+    }
+
+    if (prefersReducedMotion || typeof gsap === 'undefined') {
+      fastForwardEpilogueToEnd(true);
+      return;
+    }
+
+    epilogueCreditsStarted = true;
+    DOM.epilogueStage.classList.add('is-credits-playing');
+
+    gsap.set([DOM.epilogueTribute, DOM.epilogueReturn, DOM.epilogueFinal].filter(Boolean), {
+      autoAlpha: 0,
+      filter: 'blur(0px)',
+      scale: 1,
+      y: 0
+    });
+    gsap.set([DOM.epilogueTributeMain, DOM.epilogueTributeCredit].filter(Boolean), {
+      autoAlpha: 0,
+      filter: 'blur(0px)',
+      scale: 1,
+      y: 0
+    });
+    if (DOM.epilogueReturnText) {
+      gsap.set(DOM.epilogueReturnText, { autoAlpha: 1, filter: 'blur(0px)', scale: 1, y: 0 });
+    }
+
+    epilogueTimeline = gsap.timeline({
+      onComplete: () => {
+        epilogueCreditsPlayed = true;
+        epilogueTimeline = null;
+        if (DOM.epilogueStage) DOM.epilogueStage.classList.remove('is-credits-playing');
+        if (DOM.epilogueFinal) DOM.epilogueFinal.classList.add('is-interactive');
+        if (DOM.epilogueHnTrigger) DOM.epilogueHnTrigger.classList.add('is-ready');
+      }
+    });
+
+    // Phase 1 (0.0s - 1.9s): Complete #09090b blackout silence pause
+    // Phase 2 (1.9s - 6.2s): Tribute Typography inside stationary stacked plane
+    if (DOM.epilogueTribute) {
+      epilogueTimeline.set(DOM.epilogueTribute, { autoAlpha: 1, filter: 'blur(0px)', scale: 1, y: 0 }, 1.9);
+    }
+    if (DOM.epilogueTributeMain) {
+      epilogueTimeline.fromTo(
+        DOM.epilogueTributeMain,
+        { autoAlpha: 0, y: 10, filter: 'blur(4px)' },
+        { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.2, ease: 'power2.out' },
+        1.9
+      );
+    }
+    if (DOM.epilogueTributeCredit) {
+      epilogueTimeline.fromTo(
+        DOM.epilogueTributeCredit,
+        { autoAlpha: 0, y: 6, filter: 'blur(3px)' },
+        { autoAlpha: 0.72, y: 0, filter: 'blur(0px)', duration: 1.0, ease: 'power2.out' },
+        3.1
+      );
+    }
+
+    // Phase 3 (6.2s - 10.15s): Pure In-Place Optical Defocus & 0.35s Overlap Cross-Rack-Focus
+    if (DOM.epilogueTribute) {
+      epilogueTimeline.to(
+        DOM.epilogueTribute,
+        {
+          autoAlpha: 0,
+          filter: 'blur(14px)',
+          scale: 1.03,
+          duration: 1.0,
+          ease: 'power2.inOut'
+        },
+        6.2
+      );
+    }
+
+    if (DOM.epilogueReturn) {
+      epilogueTimeline.fromTo(
+        DOM.epilogueReturn,
+        { autoAlpha: 0, filter: 'blur(14px)', scale: 0.97, y: 0 },
+        { autoAlpha: 1, filter: 'blur(0px)', scale: 1, y: 0, duration: 1.1, ease: 'power2.out' },
+        6.85
+      );
+      // 7.95s -> 10.15s (2.2s completely stationary hold), then gentle fade-out
+      epilogueTimeline.to(
+        DOM.epilogueReturn,
+        { autoAlpha: 0, filter: 'blur(6px)', duration: 0.85, ease: 'power2.inOut' },
+        10.15
+      );
+    }
+
+    // Phase 4 (10.65s+): Permanent End Screen
+    if (DOM.epilogueFinal) {
+      epilogueTimeline.fromTo(
+        DOM.epilogueFinal,
+        { autoAlpha: 0, y: 0, scale: 1, filter: 'blur(0px)' },
+        {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          filter: 'blur(0px)',
+          duration: 1.35,
+          ease: 'power2.out',
+          onStart: () => {
+            if (DOM.epilogueFinal) DOM.epilogueFinal.classList.add('is-interactive');
+          }
+        },
+        10.65
+      );
+    }
+  }
+
+  function setEpilogueActiveState(active) {
+    if (active === inEpilogueZone) return;
+    inEpilogueZone = active;
+
+    if (DOM.navHeader) {
+      DOM.navHeader.classList.toggle('is-dimmed', active);
+    }
+
+    if (active) {
+      const hasPlayingDecks = (
+        (deckA && !deckA.paused) ||
+        (deckB && !deckB.paused) ||
+        deckALogicalGain > 0 ||
+        deckBLogicalGain > 0
+      );
+      if (ambientEnabled && hasPlayingDecks) {
+        fadeOutAmbientDecks(false, EPILOGUE_AUDIO_FADE_MS);
+      }
+      startEpilogueCredits();
+    } else if (ambientEnabled && inStageAudioZone) {
+      crossfadeAmbientToAct(currentActIndex, INITIAL_AUDIO_FADE_MS);
+    }
+  }
+
+  function openHnMorphEasterEgg() {
+    if (!DOM.hnMorphStage || isHnMorphOpen) return;
+    isHnMorphOpen = true;
+
+    if (!epilogueCreditsPlayed) {
+      fastForwardEpilogueToEnd(true);
+    }
+
+    clearEpilogueSfxTimers();
+    if (epilogueMorphTimeline) {
+      epilogueMorphTimeline.kill();
+      epilogueMorphTimeline = null;
+    }
+
+    resetHnMorphPathsTo007();
+    DOM.hnMorphStage.classList.add('is-open');
+    DOM.hnMorphStage.setAttribute('aria-hidden', 'false');
+    if (DOM.epilogueHnTrigger) DOM.epilogueHnTrigger.classList.add('is-hidden');
+    if (DOM.epilogueFinal) DOM.epilogueFinal.classList.remove('is-interactive');
+
+    getGearAudioContext(true);
+
+    if (prefersReducedMotion || typeof gsap === 'undefined') {
+      if (DOM.epilogueFinal) {
+        DOM.epilogueFinal.style.opacity = '0';
+        DOM.epilogueFinal.style.visibility = 'hidden';
+      }
+      DOM.hnMorphStage.style.opacity = '1';
+      if (DOM.hnMorphPaths) {
+        DOM.hnMorphPaths.forEach((pathEl, idx) => {
+          if (MORPH_PATHS_HN[idx]) pathEl.setAttribute('d', MORPH_PATHS_HN[idx]);
+        });
+      }
+      if (DOM.hnMorphWordmark) {
+        DOM.hnMorphWordmark.style.opacity = '1';
+        DOM.hnMorphWordmark.style.transform = 'none';
+      }
+      if (DOM.hnMorphSubmark) {
+        DOM.hnMorphSubmark.style.opacity = '0.58';
+        DOM.hnMorphSubmark.style.transform = 'none';
+      }
+      if (DOM.hnMorphHint) DOM.hnMorphHint.style.opacity = '1';
+      GearSFX.playSafetyUnlock();
+      return;
+    }
+
+    gsap.set(DOM.hnMorphStage, { opacity: 0 });
+    if (DOM.hnMorphStrokesSheen) gsap.set(DOM.hnMorphStrokesSheen, { opacity: 0 });
+    if (DOM.hnSheenMaskRect) gsap.set(DOM.hnSheenMaskRect, { attr: { x: 62 } });
+    if (DOM.hnMorphWordmark) gsap.set(DOM.hnMorphWordmark, { opacity: 0, y: 6 });
+    if (DOM.hnMorphSubmark) gsap.set(DOM.hnMorphSubmark, { opacity: 0, y: 4 });
+    if (DOM.hnMorphHint) gsap.set(DOM.hnMorphHint, { opacity: 0 });
+
+    if (DOM.epilogueFinal) {
+      gsap.to(DOM.epilogueFinal, { autoAlpha: 0, duration: 0.4, ease: 'power2.out', overwrite: true });
+    }
+
+    // Real mechanical SFX synchronized with morph motion
+    GearSFX.playBezelClick();
+    epilogueSfxTimers.push(setTimeout(() => {
+      if (isHnMorphOpen) GearSFX.playBezelClick();
+    }, 450));
+    epilogueSfxTimers.push(setTimeout(() => {
+      if (isHnMorphOpen) GearSFX.playSafetyUnlock();
+    }, 1350));
+
+    epilogueMorphTimeline = gsap.timeline({
+      onComplete: () => {
+        epilogueMorphTimeline = null;
+      }
+    });
+
+    epilogueMorphTimeline.to(DOM.hnMorphStage, { opacity: 1, duration: 0.45, ease: 'power2.out' }, 0);
+
+    if (DOM.hnMorphPaths && DOM.hnMorphPaths.length > 0) {
+      DOM.hnMorphPaths.forEach((pathEl, idx) => {
+        const targetD = MORPH_PATHS_HN[idx];
+        if (!targetD) return;
+        epilogueMorphTimeline.to(
+          pathEl,
+          { attr: { d: targetD }, duration: 1.35, ease: 'power3.inOut' },
+          0
+        );
+      });
+    }
+
+    // Lock-in cold silver metallic glint across HN strokes at 1.35s
+    if (DOM.hnMorphStrokesSheen && DOM.hnSheenMaskRect) {
+      epilogueMorphTimeline.set(DOM.hnMorphStrokesSheen, { opacity: 1 }, 1.35);
+      epilogueMorphTimeline.fromTo(
+        DOM.hnSheenMaskRect,
+        { attr: { x: 68 } },
+        { attr: { x: 256 }, duration: 0.72, ease: 'power2.inOut' },
+        1.35
+      );
+      epilogueMorphTimeline.to(DOM.hnMorphStrokesSheen, { opacity: 0, duration: 0.25 }, 1.92);
+    }
+
+    if (DOM.hnMorphWordmark) {
+      epilogueMorphTimeline.to(DOM.hnMorphWordmark, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' }, 1.5);
+    }
+    if (DOM.hnMorphSubmark) {
+      epilogueMorphTimeline.to(DOM.hnMorphSubmark, { opacity: 0.58, y: 0, duration: 0.65, ease: 'power2.out' }, 1.72);
+    }
+    if (DOM.hnMorphHint) {
+      epilogueMorphTimeline.to(DOM.hnMorphHint, { opacity: 1, duration: 0.6, ease: 'power1.out' }, 2.0);
+    }
+  }
+
+  function closeHnMorphEasterEgg() {
+    if (!DOM.hnMorphStage || !isHnMorphOpen) return;
+    isHnMorphOpen = false;
+
+    clearEpilogueSfxTimers();
+    if (epilogueMorphTimeline) {
+      epilogueMorphTimeline.kill();
+      epilogueMorphTimeline = null;
+    }
+
+    GearSFX.playToggleSwitch();
+
+    const finishClose = () => {
+      if (DOM.hnMorphStage) {
+        DOM.hnMorphStage.classList.remove('is-open');
+        DOM.hnMorphStage.setAttribute('aria-hidden', 'true');
+        DOM.hnMorphStage.style.opacity = '0';
+      }
+      resetHnMorphPathsTo007();
+      if (DOM.epilogueHnTrigger) DOM.epilogueHnTrigger.classList.remove('is-hidden');
+      if (DOM.epilogueFinal) DOM.epilogueFinal.classList.add('is-interactive');
+    };
+
+    if (prefersReducedMotion || typeof gsap === 'undefined') {
+      if (DOM.epilogueFinal) {
+        DOM.epilogueFinal.style.opacity = '1';
+        DOM.epilogueFinal.style.visibility = 'visible';
+      }
+      finishClose();
+      return;
+    }
+
+    gsap.to(DOM.hnMorphStage, {
+      opacity: 0,
+      duration: 0.4,
+      ease: 'power2.out',
+      overwrite: true,
+      onComplete: finishClose
+    });
+    if (DOM.epilogueFinal) {
+      gsap.to(DOM.epilogueFinal, { autoAlpha: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.55, delay: 0.12, ease: 'power2.out', overwrite: true });
+    }
+  }
+
+  function initEpilogueStage() {
+    if (!DOM.epilogueStage) return;
+
+    if ('IntersectionObserver' in window) {
+      if (epilogueObserver) epilogueObserver.disconnect();
+      epilogueObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const active = entry.intersectionRatio >= 0.55 || isEpilogueMajorityVisible();
+            setEpilogueActiveState(active);
+          });
+        },
+        { threshold: [0, 0.55] }
+      );
+      epilogueObserver.observe(DOM.epilogueStage);
+    }
+
+    // Fallback & high-speed scroll check for environments without active IntersectionObserver ticks
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (isEpilogueMajorityVisible()) {
+          setEpilogueActiveState(true);
+        } else if (inEpilogueZone) {
+          setEpilogueActiveState(false);
+        }
+      },
+      { passive: true }
+    );
+
+    if (isEpilogueMajorityVisible()) {
+      setEpilogueActiveState(true);
+    }
+
+    DOM.epilogueStage.addEventListener('click', (e) => {
+      if (isHnMorphOpen) {
+        const clickedClose = e.target && e.target.closest && e.target.closest('#hn-morph-close');
+        if (!clickedClose) closeHnMorphEasterEgg();
+        return;
+      }
+
+      const clickedTrigger = e.target && e.target.closest && e.target.closest('#epilogue-hn-trigger');
+      if (clickedTrigger) return;
+
+      if (epilogueCreditsStarted && !epilogueCreditsPlayed) {
+        fastForwardEpilogueToEnd(false);
+      }
+    });
+
+    if (DOM.epilogueHnTrigger) {
+      DOM.epilogueHnTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openHnMorphEasterEgg();
+      });
+    }
+
+    if (DOM.hnMorphClose) {
+      DOM.hnMorphClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeHnMorphEasterEgg();
+      });
     }
   }
 
@@ -1814,7 +2015,6 @@
     setHudContent(currentActIndex, currentLang);
     renderArtifactsGrid(data.artifacts, currentLang);
     initDarkroomGallery();
-    renderSoundtrackCatalog(data.soundtracks, data.soundtracksSection, currentLang);
     initScrollReveals();
   }
 
@@ -1915,7 +2115,7 @@
         }
         const barEl = e.target && e.target.closest ? e.target.closest('.gain-bar') : null;
         const vol = computeVolumeFromClientX(e.clientX, barEl);
-        setMasterVolume(vol, !ambientEnabled && !isManualPlaying);
+        setMasterVolume(vol, !ambientEnabled);
       });
 
       DOM.audioGainMeter.addEventListener('pointermove', (e) => {
@@ -1933,7 +2133,7 @@
         const barEl = e.target && e.target.closest ? e.target.closest('.gain-bar') : null;
         const levelAttr = barEl ? parseFloat(barEl.getAttribute('data-level') || '') : NaN;
         const vol = !isNaN(levelAttr) ? levelAttr : computeVolumeFromClientX(e.clientX, barEl);
-        setMasterVolume(vol, !ambientEnabled && !isManualPlaying);
+        setMasterVolume(vol, !ambientEnabled);
         blurGainControls(barEl || DOM.audioGainMeter);
         scheduleCollapseGainMeter(GAIN_COLLAPSE_DELAY_MS);
       });
@@ -1942,12 +2142,12 @@
         if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
           e.preventDefault();
           expandGainMeter();
-          setMasterVolume(Math.min(1, masterVolume + 0.2), !ambientEnabled && !isManualPlaying);
+          setMasterVolume(Math.min(1, masterVolume + 0.2), !ambientEnabled);
           scheduleCollapseGainMeter(GAIN_COLLAPSE_DELAY_MS);
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
           e.preventDefault();
           expandGainMeter();
-          setMasterVolume(Math.max(0.2, masterVolume - 0.2), !ambientEnabled && !isManualPlaying);
+          setMasterVolume(Math.max(0.2, masterVolume - 0.2), !ambientEnabled);
           scheduleCollapseGainMeter(GAIN_COLLAPSE_DELAY_MS);
         }
       });
@@ -1986,12 +2186,9 @@
       }
     };
 
-    // Return to Top (Nav 007 Logo + Curtain Call Button)
+    // Return to Top (Nav 007 Logo)
     if (DOM.navHomeBtn) {
       DOM.navHomeBtn.addEventListener('click', scrollToPageTop);
-    }
-    if (DOM.backToTopBtn) {
-      DOM.backToTopBtn.addEventListener('click', scrollToPageTop);
     }
 
     // Vernier Scale Milestone Click-to-Jump Navigation
@@ -2024,13 +2221,17 @@
       });
     }
 
-    // Keyboard Access: Alt + L for language switch, Escape to close crosshair dossier
+    // Keyboard Access: Alt + L for language switch, Escape to close dossier or HN Studio morph
     window.addEventListener('keydown', (e) => {
       if (e.altKey && (e.key === 'l' || e.key === 'L')) {
         setLanguage(currentLang === 'zh' ? 'en' : 'zh');
       }
-      if ((e.key === 'Escape' || e.key === 'Esc') && DOM.dossierWidget && DOM.dossierWidget.classList.contains('is-open')) {
-        setDossierOpen(false);
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        if (isHnMorphOpen) {
+          closeHnMorphEasterEgg();
+        } else if (DOM.dossierWidget && DOM.dossierWidget.classList.contains('is-open')) {
+          setDossierOpen(false);
+        }
       }
     });
 
@@ -2106,9 +2307,8 @@
 
     renderArtifactsGrid(data.artifacts, currentLang);
     initDarkroomGallery();
-    renderSoundtrackCatalog(data.soundtracks, data.soundtracksSection, currentLang);
     initScrollReveals();
-    initAudioPlayer();
+    initEpilogueStage();
 
     if (document.readyState === 'complete') {
       initGunBarrelScrollytelling();
@@ -2119,7 +2319,7 @@
     }
 
     // Attempt default 30% ambient fade-in right on Hero; fall back cleanly to standby unlock if blocked
-    if (ambientEnabled && inStageAudioZone && !isManualPlaying) {
+    if (ambientEnabled && inStageAudioZone && !inEpilogueZone) {
       crossfadeAmbientToAct(0, INITIAL_AUDIO_FADE_MS);
     }
 
