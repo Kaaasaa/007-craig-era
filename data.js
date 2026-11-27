@@ -54,6 +54,12 @@ const SITE_DATA = {
       }
     },
 
+    mobileGate: {
+      kicker: "DESIGNED FOR DESKTOP",
+      message: "本作品为桌面端大屏视听献礼，建议在桌面浏览器开启完整体验",
+      dismiss: "仍继续浏览"
+    },
+
     curtainCall: {
       quote: "“We have all the time in the world.”",
       backToTopAria: "返回页面顶部",
@@ -287,6 +293,12 @@ const SITE_DATA = {
         bezelPrefix: "BEZEL",
         bezelUnit: "MIN"
       }
+    },
+
+    mobileGate: {
+      kicker: "DESIGNED FOR DESKTOP",
+      message: "Crafted for desktop displays and tactile cursor choreography. Visit on a desktop browser for the complete exhibition.",
+      dismiss: "Continue Anyway"
     },
 
     curtainCall: {

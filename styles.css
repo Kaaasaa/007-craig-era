@@ -18,7 +18,6 @@
   --border-hairline: rgba(234, 230, 223, 0.09);
   --border-active: rgba(234, 230, 223, 0.24);
   --accent-silver: #C5C2BC;
-  --chapter-accent: #8FA8BE;
 
   /* Typography Stacks */
   --font-serif: 'Cormorant Garamond', 'Noto Serif SC', 'Songti SC', Georgia, serif;
@@ -47,7 +46,6 @@
 
 html {
   font-size: 16px;
-  scroll-behavior: smooth;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   text-rendering: optimizeLegibility;
@@ -118,8 +116,75 @@ button {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 9998;
+  z-index: 2;
   background: radial-gradient(circle at 50% 50%, transparent 62%, rgba(0, 0, 0, 0.72) 100%);
+}
+
+/* Minimalist Matte Charcoal Desktop Exhibition Notice (Mobile / Touch Entry) */
+.mobile-exhibit-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: #09090b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+}
+
+.mobile-exhibit-gate.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.45s ease, visibility 0s linear 0s;
+}
+
+.mobile-gate-inner {
+  max-width: 340px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.35rem;
+}
+
+.mobile-gate-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.mobile-gate-message {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--text-primary);
+}
+
+.mobile-gate-dismiss {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  color: rgba(234, 230, 223, 0.52);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.mobile-gate-dismiss:hover,
+.mobile-gate-dismiss:focus-visible {
+  color: var(--text-primary);
 }
 
 /* ==========================================================================
@@ -352,7 +417,7 @@ button {
   height: 16vh;
   background: linear-gradient(to bottom, transparent 0%, var(--bg-primary) 100%);
   pointer-events: none;
-  z-index: 3;
+  z-index: 6;
 }
 
 .hero-inner {
@@ -363,20 +428,20 @@ button {
   min-height: calc(100svh - var(--nav-height) - 6rem);
   width: 100%;
   position: relative;
-  z-index: 2;
+  z-index: 5;
 }
 
 .hero-centerpiece {
   margin: auto 0;
   padding: 4rem 0;
-  max-width: clamp(500px, 52vw, 760px);
+  max-width: clamp(440px, 47vw, 720px);
   position: relative;
   z-index: 2;
 }
 
 .hero-title {
   font-family: var(--font-serif);
-  font-size: clamp(3.35rem, 8.2vw, 7.25rem);
+  font-size: clamp(3rem, 6.8vw, 7.25rem);
   font-weight: 300;
   line-height: 0.94;
   letter-spacing: 0.04em;
@@ -391,6 +456,10 @@ button {
   letter-spacing: 0.26em;
   color: var(--accent-silver);
   margin-top: 0.95rem;
+}
+
+html[lang="en"] .hero-title-zh {
+  letter-spacing: 0.16em;
 }
 
 .hero-subtitle {
@@ -467,7 +536,7 @@ button {
 /* Hero Right-Hand Daniel Craig Silhouette with Cinema Noir Rim Glow */
 .hero-silhouette-wrap {
   position: absolute;
-  right: 6vw;
+  right: clamp(3.2vw, 5vw, 6vw);
   bottom: 0;
   height: 82vh;
   max-height: 860px;
@@ -477,7 +546,7 @@ button {
   justify-content: center;
   pointer-events: none;
   user-select: none;
-  z-index: 1;
+  z-index: 4;
 }
 
 .hero-silhouette-glow {
@@ -512,27 +581,11 @@ button {
   width: 100%;
   height: 100vh;
   height: 100svh;
+  z-index: 5;
   overflow: hidden;
   background-color: var(--bg-primary);
   border-bottom: var(--hairline);
   will-change: transform;
-}
-
-/* Chapter-Specific Accent Tokens for Mechanical Vernier Ruler */
-.one-shot-stage[data-act="0"] {
-  --chapter-accent: #8FA8BE;
-}
-.one-shot-stage[data-act="1"] {
-  --chapter-accent: #B88B58;
-}
-.one-shot-stage[data-act="2"] {
-  --chapter-accent: #9BA3AB;
-}
-.one-shot-stage[data-act="3"] {
-  --chapter-accent: #B59B6A;
-}
-.one-shot-stage[data-act="4"] {
-  --chapter-accent: #7D9B8F;
 }
 
 .stage-layer {
@@ -724,6 +777,11 @@ button {
   font-weight: 400;
   line-height: 1.45;
   color: rgba(234, 230, 223, 0.78);
+}
+
+html[lang="zh-CN"] #hud-quote-text,
+html[lang="zh-CN"] .epilogue-tribute-main {
+  font-style: normal;
 }
 
 /* Precision Crosshair (+) Dossier Easter Egg (Bottom-Right) */
@@ -976,6 +1034,8 @@ button {
    ========================================================================== */
 .darkroom-section {
   background-color: #09090b;
+  position: relative;
+  z-index: 5;
 }
 
 .section-header--minimal {
@@ -1059,8 +1119,17 @@ button {
   touch-action: pan-y;
 }
 
+.gear-item--omega.is-bezel-hover .gear-stage {
+  cursor: grab;
+}
+
+.gear-item--omega.is-dragging .gear-stage {
+  cursor: grabbing;
+}
+
 .gear-item--tailoring .gear-stage {
   aspect-ratio: 3 / 4;
+  cursor: crosshair;
 }
 
 .gear-item--walther .gear-stage {
@@ -1268,7 +1337,7 @@ button {
   width: 136px;
   height: 136px;
   border-radius: 50%;
-  border: 1px solid rgba(234, 230, 223, 0.45);
+  border: 1px solid rgba(234, 230, 223, 0.52);
   background-color: #09090b;
   background-repeat: no-repeat;
   pointer-events: none;
@@ -1276,7 +1345,11 @@ button {
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.75);
   transition: opacity 0.2s ease, transform 0.24s var(--ease-standard);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), inset 0 0 18px rgba(9, 9, 11, 0.35);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.78),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    inset 10px 10px 22px rgba(255, 255, 255, 0.08),
+    inset -10px -12px 24px rgba(0, 0, 0, 0.65);
 }
 
 .tailoring-loupe::before,
@@ -1484,6 +1557,7 @@ button {
   width: 100%;
   background: #09090b;
   overflow: hidden;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1532,7 +1606,7 @@ button {
 
 .epilogue-tribute-main {
   font-family: var(--font-serif);
-  font-size: clamp(1.125rem, 2.3vw, 2.2rem);
+  font-size: clamp(1rem, 2.25vw, 2.2rem);
   font-weight: 300;
   font-style: italic;
   letter-spacing: 0.04em;
@@ -1622,7 +1696,7 @@ button {
 }
 
 .epilogue-hn-trigger.is-ready {
-  opacity: 0.16;
+  opacity: var(--trigger-proximity-opacity, 0.16);
   pointer-events: auto;
 }
 
@@ -1677,7 +1751,7 @@ button {
 }
 
 .hn-morph-svg-wrap {
-  width: min(360px, 78vw);
+  width: min(440px, max(260px, 28vw));
 }
 
 .hn-morph-svg {
@@ -1736,6 +1810,12 @@ button {
 /* ==========================================================================
    10. RESPONSIVE MEDIA QUERIES
    ========================================================================== */
+@media (min-aspect-ratio: 21/10) {
+  .act-bg-3 .act-backdrop {
+    background-position: 50% 38%;
+  }
+}
+
 @media (max-width: 959px) {
   .darkroom-gallery {
     flex-direction: column;

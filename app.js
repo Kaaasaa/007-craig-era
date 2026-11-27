@@ -13,6 +13,7 @@
   // ==========================================
   const STORAGE_KEY_LANG = 'bond_archive_lang';
   const STORAGE_KEY_VOL = 'bond_archive_master_vol';
+  const STORAGE_KEY_MOBILE_GATE = 'bond_archive_mobile_dismissed';
   const DEFAULT_LANG = 'zh';
   const DEFAULT_MASTER_VOLUME = 0.3;
 
@@ -53,7 +54,7 @@
   [deckA, deckB].forEach((deck) => {
     if (deck) {
       deck.loop = true;
-      deck.preload = 'none';
+      deck.preload = 'auto';
       deck.volume = 0;
     }
   });
@@ -65,11 +66,14 @@
   let ambientEnabled = true;
   let pendingAutoplayUnlock = false;
   let unlockListenersBound = false;
-  let inStageAudioZone = true;
+  let inStageAudioZone = false;
   let inEpilogueZone = false;
   let activeAmbientDeck = deckA;
   let ambientTrackIndex = -1;
   let crossfadeRafId = null;
+  let crossfadeSessionId = 0;
+  let pendingCanplayCleanup = null;
+  const ambientPreloadCache = new Map();
 
   // Silent Film Epilogue & 007 -> HN STUDIO Morph State
   const EPILOGUE_AUDIO_FADE_MS = 1800;
@@ -87,6 +91,7 @@
     'M 194 22 C 194 35 194 47 194 60 C 194 73 194 85 194 98',
     'M 194 22 C 210 47 226 73 242 98 C 242 73 242 47 242 22'
   ];
+  let epilogueInitialized = false;
   let epilogueObserver = null;
   let epilogueCreditsStarted = false;
   let epilogueCreditsPlayed = false;
@@ -94,6 +99,7 @@
   let epilogueMorphTimeline = null;
   let epilogueSfxTimers = [];
   let isHnMorphOpen = false;
+  let lastStageProgress = 0;
 
   // Interactive Darkroom Exhibit State (persists across bilingual re-renders)
   const gearState = {
@@ -124,6 +130,12 @@
   const DOM = {
     html: document.documentElement,
     mainContent: document.getElementById('main-content'),
+
+    // Mobile Exhibition Gate
+    mobileGate: document.getElementById('mobile-exhibit-gate'),
+    mobileGateKicker: document.getElementById('mobile-gate-kicker'),
+    mobileGateMessage: document.getElementById('mobile-gate-message'),
+    mobileGateDismiss: document.getElementById('mobile-gate-dismiss'),
 
     // Nav
     navHeader: document.querySelector('.site-header'),
@@ -171,6 +183,7 @@
 
     // Mechanical Vernier Scale Ruler
     stageRuler: document.getElementById('stage-ruler'),
+    vernierMinorTicks: document.querySelectorAll('.vernier-minor-ticks line'),
     vernierMajorTicks: document.querySelectorAll('.vernier-major-tick'),
     rulerNodes: document.querySelectorAll('.ruler-node'),
 
@@ -240,6 +253,13 @@
     if (DOM.artifactsSectionIdx) DOM.artifactsSectionIdx.textContent = data.artifactsSection.sectionIndex;
     if (DOM.artifactsSectionCat) DOM.artifactsSectionCat.textContent = data.artifactsSection.sectionCategory;
     if (DOM.artifactsTitle) DOM.artifactsTitle.textContent = data.artifactsSection.title;
+
+    // Mobile Desktop-First Exhibit Gate Copy
+    if (data.mobileGate) {
+      if (DOM.mobileGateKicker) DOM.mobileGateKicker.textContent = data.mobileGate.kicker;
+      if (DOM.mobileGateMessage) DOM.mobileGateMessage.textContent = data.mobileGate.message;
+      if (DOM.mobileGateDismiss) DOM.mobileGateDismiss.textContent = data.mobileGate.dismiss;
+    }
 
     // Silent Film Epilogue & HN Studio Easter Egg Copy
     if (data.curtainCall) {
@@ -319,8 +339,8 @@
   }
 
   function getGearSfxGain() {
-    if (!ambientEnabled && !pendingAutoplayUnlock) return 0;
-    return Math.min(1, Math.max(0.2, masterVolume)) * 0.45;
+    if (masterVolume <= 0) return 0;
+    return Math.min(1, masterVolume) * 0.75;
   }
 
   function triggerNoisePulse(ctx, startTime, durationSec, centerHz, qVal, peakGain) {
@@ -494,8 +514,8 @@
       src.playbackRate.value = playbackRate;
     }
 
-    // Scale real normalized -1 dBFS foley cleanly to global masterVolume (0.2..1.0)
-    const sampleGain = Math.min(1, Math.max(0.2, masterVolume)) * 0.85;
+    // Align normalized -1 dBFS sample foley identically with fallback synth gain (~0.75 at max)
+    const sampleGain = baseVol;
     const gainNode = ctx.createGain();
     gainNode.gain.setValueAtTime(Math.max(0.0001, sampleGain), ctx.currentTime);
 
@@ -595,6 +615,7 @@
       const isUnlocked = (item.id === 'walther' && gearState.ppkUnlocked) ? 'is-unlocked' : '';
 
       let extraMediaHtml = '';
+      let loupeHtml = '';
       if (item.id === 'db5') {
         extraMediaHtml = `
           <div class="db5-lights-layer" aria-hidden="true">
@@ -623,7 +644,7 @@
           </div>
         `;
       } else if (item.id === 'tailoring') {
-        extraMediaHtml = `
+        loupeHtml = `
           <div class="tailoring-loupe" style="background-image: url('${escapeHTML(item.image)}');" aria-hidden="true"></div>
         `;
       }
@@ -664,6 +685,7 @@
               <div class="gear-rim-light" aria-hidden="true"></div>
               <div class="gear-edge-vignette" aria-hidden="true"></div>
             </div>
+            ${loupeHtml}
             ${bezelReadoutHtml}
             ${hotspotsHtml}
           </div>
@@ -694,6 +716,12 @@
     };
 
     const setGearFocus = (gearId) => {
+      if (gearState.focusedId !== gearId && gearState.activeHotspotId) {
+        gearState.activeHotspotId = null;
+        container.querySelectorAll('.gear-hotspot.is-active').forEach((btn) => {
+          btn.classList.remove('is-active');
+        });
+      }
       gearState.focusedId = gearId;
       container.classList.toggle('has-focus', Boolean(gearId));
       const items = container.querySelectorAll('.gear-item');
@@ -739,8 +767,17 @@
     let watchDragActive = false;
     let watchCenterX = 0;
     let watchCenterY = 0;
+    let watchDownX = 0;
+    let watchDownY = 0;
     let watchPrevPtrAngle = 0;
     let watchDragAccum = 0;
+    let watchRawPtrTravel = 0;
+    let bezelBurstTimers = [];
+
+    const clearBezelBurstTimers = () => {
+      bezelBurstTimers.forEach((tid) => clearTimeout(tid));
+      bezelBurstTimers = [];
+    };
 
     const showBezelReadoutTemporarily = () => {
       const watchItem = container.querySelector('.gear-item--omega');
@@ -761,10 +798,25 @@
     const applyWatchAngle = (nextAngle, snapAnimate = false) => {
       gearState.watchAngle = nextAngle;
       const newStep = Math.floor(Math.abs(gearState.watchAngle) / 6);
-      if (newStep !== gearState.watchRatchetStep) {
+      const stepDelta = Math.abs(newStep - gearState.watchRatchetStep);
+
+      if (snapAnimate) {
+        clearBezelBurstTimers();
+        gearState.watchRatchetStep = newStep;
+        const clickCount = Math.min(3, Math.max(1, stepDelta || 3));
+        const offsetsMs = [0, 55, 110];
+        for (let i = 0; i < clickCount; i++) {
+          if (offsetsMs[i] === 0) {
+            GearSFX.playBezelClick();
+          } else {
+            bezelBurstTimers.push(setTimeout(() => GearSFX.playBezelClick(), offsetsMs[i]));
+          }
+        }
+      } else if (stepDelta > 0) {
         gearState.watchRatchetStep = newStep;
         GearSFX.playBezelClick();
       }
+
       const watchItem = container.querySelector('.gear-item--omega');
       const rotator = watchItem ? watchItem.querySelector('.watch-bezel-rotator') : null;
       if (watchItem && rotator) {
@@ -809,6 +861,10 @@
       const item = e.target && e.target.closest ? e.target.closest('.gear-item') : null;
 
       if (watchDragActive) {
+        watchRawPtrTravel = Math.max(
+          watchRawPtrTravel,
+          Math.hypot(e.clientX - watchDownX, e.clientY - watchDownY)
+        );
         const currentAngle = Math.atan2(e.clientY - watchCenterY, e.clientX - watchCenterX) * (180 / Math.PI);
         let delta = currentAngle - watchPrevPtrAngle;
         if (delta > 180) delta -= 360;
@@ -834,6 +890,12 @@
       const v = Math.min(rect.height, Math.max(0, e.clientY - rect.top));
       const uPct = (u / rect.width) * 100;
       const vPct = (v / rect.height) * 100;
+
+      // Intuitive grab cursor affordance strictly over Omega bezel ring band (26% - 46% radius)
+      if (id === 'omega') {
+        const ringRadiusPct = Math.hypot(uPct - 50, vPct - 48.2);
+        item.classList.toggle('is-bezel-hover', ringRadiusPct >= 26 && ringRadiusPct <= 46.5);
+      }
 
       // Subtle darkroom rim-light follows cursor
       const rim = item.querySelector('.gear-rim-light');
@@ -881,6 +943,7 @@
       if (leftItem && leftItem !== toItem) {
         const id = leftItem.getAttribute('data-gear-id');
         if (id === 'tailoring') leftItem.classList.remove('is-loupe-active');
+        if (id === 'omega') leftItem.classList.remove('is-bezel-hover');
         if (id === 'walther') cancelPpkHoverTimer();
       }
     });
@@ -898,13 +961,20 @@
 
       watchCenterX = rect.left + rect.width * 0.5;
       watchCenterY = rect.top + rect.height * 0.482;
+      watchDownX = e.clientX;
+      watchDownY = e.clientY;
       watchPrevPtrAngle = Math.atan2(e.clientY - watchCenterY, e.clientX - watchCenterX) * (180 / Math.PI);
       watchDragAccum = 0;
+      watchRawPtrTravel = 0;
       watchDragActive = true;
+      omegaItem.classList.add('is-dragging');
     });
 
     const stopWatchDrag = () => {
+      if (!watchDragActive) return;
       watchDragActive = false;
+      const omegaItem = container.querySelector('.gear-item--omega');
+      if (omegaItem) omegaItem.classList.remove('is-dragging');
     };
     window.addEventListener('pointerup', stopWatchDrag);
     window.addEventListener('pointercancel', stopWatchDrag);
@@ -954,10 +1024,11 @@
         item.classList.toggle('is-lights-on', gearState.db5LightsOn);
         GearSFX.playToggleSwitch();
       } else if (gearId === 'omega') {
-        // Click dial/bezel advances -18deg counter-clockwise (3 clicks = 3 minutes)
-        if (watchDragAccum < 5) {
+        // Click dial/bezel advances -18deg counter-clockwise (only if pointer didn't drag clockwise or spin)
+        if (watchRawPtrTravel < 6 && watchDragAccum < 5) {
           applyWatchAngle(gearState.watchAngle - 18, true);
         }
+        watchRawPtrTravel = 0;
         watchDragAccum = 0;
       } else if (gearId === 'walther') {
         cancelPpkHoverTimer();
@@ -1156,12 +1227,41 @@
     });
   }
 
+  function preloadAdjacentThemes(targetActIdx) {
+    const films = siteData.zh && siteData.zh.films;
+    if (!Array.isArray(films) || typeof Audio === 'undefined') return;
+
+    [targetActIdx, targetActIdx + 1].forEach((idx) => {
+      const f = films[idx];
+      if (!f || !f.audioSrc || ambientPreloadCache.has(f.audioSrc)) return;
+      try {
+        const pre = new Audio();
+        pre.preload = 'auto';
+        pre.volume = 0;
+        pre.src = f.audioSrc;
+        if (typeof pre.load === 'function') pre.load();
+        ambientPreloadCache.set(f.audioSrc, pre);
+      } catch (e) {
+        // Ignore preload error on restricted environments
+      }
+    });
+  }
+
+  function clearPendingCanplay() {
+    if (pendingCanplayCleanup) {
+      pendingCanplayCleanup();
+      pendingCanplayCleanup = null;
+    }
+  }
+
   /**
    * Cancel any active rAF crossfade and ramp/stop ambient decks linearly
    * @param {boolean} immediate - true to immediately silence & pause both decks
    * @param {number} durationMs - linear fade-out duration in milliseconds
    */
   function fadeOutAmbientDecks(immediate = false, durationMs = 750) {
+    crossfadeSessionId += 1;
+    clearPendingCanplay();
     if (crossfadeRafId) {
       cancelAnimationFrame(crossfadeRafId);
       crossfadeRafId = null;
@@ -1213,7 +1313,7 @@
 
   /**
    * Smoothly crossfade ambient background soundtrack to the target chapter index
-   * Guarantees zero overlapping audio tracks during rapid scrolling
+   * Defers fading outgoing track on cold network fetch until incoming deck is ready
    * @param {number} targetActIdx
    * @param {number} durationMs
    */
@@ -1224,10 +1324,16 @@
     const film = films && films[targetActIdx];
     if (!film || !film.audioSrc) return;
 
+    preloadAdjacentThemes(targetActIdx);
+
     // Avoid restarting if already playing or crossfading into this exact chapter
     if (targetActIdx === ambientTrackIndex && activeAmbientDeck && !activeAmbientDeck.paused) {
       return;
     }
+
+    crossfadeSessionId += 1;
+    const sessionId = crossfadeSessionId;
+    clearPendingCanplay();
 
     if (crossfadeRafId) {
       cancelAnimationFrame(crossfadeRafId);
@@ -1253,6 +1359,9 @@
       incomingDeck.src = film.audioSrc;
       incomingDeck.setAttribute('data-src', film.audioSrc);
       incomingDeck.currentTime = 0;
+      if (typeof incomingDeck.load === 'function') {
+        incomingDeck.load();
+      }
       if (incomingDeck === deckA) {
         deckALogicalGain = 0;
       } else {
@@ -1263,10 +1372,13 @@
 
     activeAmbientDeck = incomingDeck;
 
+    const outgoingActive = (incomingDeck === deckA ? deckBLogicalGain : deckALogicalGain) > 0;
+
+    // Trigger play() synchronously within caller stack (preserves browser user activation)
     const playPromise = incomingDeck.play();
     if (playPromise && typeof playPromise.catch === 'function') {
       playPromise.catch((err) => {
-        if (err && err.name !== 'AbortError') {
+        if (err && err.name !== 'AbortError' && sessionId === crossfadeSessionId) {
           ambientEnabled = false;
           if (err.name === 'NotAllowedError') {
             pendingAutoplayUnlock = true;
@@ -1278,45 +1390,79 @@
       });
     }
 
-    const startInGain = incomingDeck === deckA ? deckALogicalGain : deckBLogicalGain;
-    const startOutGain = outgoingDeck === deckA ? deckALogicalGain : deckBLogicalGain;
-    const startTime = performance.now();
-    const fadeMs = Math.max(100, durationMs);
-
-    function step(now) {
-      const rawT = Math.min(1, (now - startTime) / fadeMs);
-      // Smooth sine ease-in-out
-      const t = 0.5 - 0.5 * Math.cos(Math.PI * rawT);
-
-      const inGain = Math.min(MAX_AMBIENT_GAIN, startInGain + (MAX_AMBIENT_GAIN - startInGain) * t);
-      const outGain = Math.max(0, startOutGain * (1 - t));
-
-      if (incomingDeck === deckA) {
-        deckALogicalGain = inGain;
-        deckBLogicalGain = outGain;
-      } else {
-        deckBLogicalGain = inGain;
-        deckALogicalGain = outGain;
+    const launchCrossfadeRamp = () => {
+      if (sessionId !== crossfadeSessionId || !ambientEnabled || !inStageAudioZone || inEpilogueZone) {
+        return;
       }
-      applyMasterVolume();
 
-      if (rawT < 1) {
-        crossfadeRafId = requestAnimationFrame(step);
-      } else {
-        outgoingDeck.pause();
+      const startInGain = incomingDeck === deckA ? deckALogicalGain : deckBLogicalGain;
+      const startOutGain = outgoingDeck === deckA ? deckALogicalGain : deckBLogicalGain;
+      const startTime = performance.now();
+      const fadeMs = Math.max(100, durationMs);
+
+      function step(now) {
+        if (sessionId !== crossfadeSessionId) return;
+        const rawT = Math.min(1, (now - startTime) / fadeMs);
+        // Smooth sine ease-in-out
+        const t = 0.5 - 0.5 * Math.cos(Math.PI * rawT);
+
+        const inGain = Math.min(MAX_AMBIENT_GAIN, startInGain + (MAX_AMBIENT_GAIN - startInGain) * t);
+        const outGain = Math.max(0, startOutGain * (1 - t));
+
         if (incomingDeck === deckA) {
-          deckALogicalGain = MAX_AMBIENT_GAIN;
-          deckBLogicalGain = 0;
+          deckALogicalGain = inGain;
+          deckBLogicalGain = outGain;
         } else {
-          deckBLogicalGain = MAX_AMBIENT_GAIN;
-          deckALogicalGain = 0;
+          deckBLogicalGain = inGain;
+          deckALogicalGain = outGain;
         }
         applyMasterVolume();
-        crossfadeRafId = null;
+
+        if (rawT < 1) {
+          crossfadeRafId = requestAnimationFrame(step);
+        } else {
+          outgoingDeck.pause();
+          if (incomingDeck === deckA) {
+            deckALogicalGain = MAX_AMBIENT_GAIN;
+            deckBLogicalGain = 0;
+          } else {
+            deckBLogicalGain = MAX_AMBIENT_GAIN;
+            deckALogicalGain = 0;
+          }
+          applyMasterVolume();
+          crossfadeRafId = null;
+        }
       }
+
+      crossfadeRafId = requestAnimationFrame(step);
+    };
+
+    const isNetworkBuffering = outgoingActive && typeof incomingDeck.readyState === 'number' && incomingDeck.readyState < 2;
+    if (!isNetworkBuffering) {
+      launchCrossfadeRamp();
+      return;
     }
 
-    crossfadeRafId = requestAnimationFrame(step);
+    // Hold outgoing track steady while incoming MP3 buffers first audio frames over HTTP
+    let fallbackTimer = null;
+    const onReady = () => {
+      clearPendingCanplay();
+      launchCrossfadeRamp();
+    };
+    const cleanup = () => {
+      if (fallbackTimer) {
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
+      if (typeof incomingDeck.removeEventListener === 'function') {
+        incomingDeck.removeEventListener('canplay', onReady);
+        incomingDeck.removeEventListener('playing', onReady);
+      }
+    };
+    pendingCanplayCleanup = cleanup;
+    incomingDeck.addEventListener('canplay', onReady, { once: true });
+    incomingDeck.addEventListener('playing', onReady, { once: true });
+    fallbackTimer = setTimeout(onReady, 1800);
   }
 
   function toggleAmbientSound() {
@@ -1341,9 +1487,42 @@
   // 6. GSAP GUN BARREL APERTURE & 2.39:1 CLIMAX CHOREOGRAPHY
   // ==========================================
 
+  function updateAudioZoneFromScroll() {
+    const st = (typeof ScrollTrigger !== 'undefined' && typeof ScrollTrigger.getById === 'function')
+      ? ScrollTrigger.getById('oneShotScrolly')
+      : null;
+    const sy = typeof window !== 'undefined' ? (window.scrollY || window.pageYOffset || 0) : 0;
+
+    if (st && typeof st.start === 'number' && typeof st.end === 'number' && st.end > st.start) {
+      if (sy > st.end + 2) {
+        inStageAudioZone = false;
+        return;
+      }
+      inStageAudioZone = true;
+      if (sy >= st.start) {
+        const prog = Math.min(1, Math.max(0, (sy - st.start) / (st.end - st.start)));
+        handleScrollProgress(prog);
+      }
+      return;
+    }
+
+    // Fallback check when ScrollTrigger pin isn't bound yet
+    if (DOM.artifactsGridContainer && typeof DOM.artifactsGridContainer.getBoundingClientRect === 'function') {
+      const rect = DOM.artifactsGridContainer.getBoundingClientRect();
+      const vh = window.innerHeight || 900;
+      if (rect && rect.height > 0 && rect.top < vh * 0.75) {
+        inStageAudioZone = false;
+        return;
+      }
+    }
+    inStageAudioZone = true;
+  }
+
   function initGunBarrelScrollytelling() {
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
       console.warn('[007 ARCHIVE] GSAP or ScrollTrigger not loaded.');
+      initEpilogueStage();
+      updateAudioZoneFromScroll();
       return;
     }
 
@@ -1356,7 +1535,10 @@
     }
 
     const stage = DOM.oneShotStage;
-    if (!stage) return;
+    if (!stage) {
+      initEpilogueStage();
+      return;
+    }
 
     if (oneShotTimeline) {
       oneShotTimeline.kill();
@@ -1374,7 +1556,10 @@
     const skyfallRain = DOM.skyfallRain;
     const hudSubtitlesContent = DOM.hudSubtitlesContent;
 
-    if (!cinemaViewport) return;
+    if (!cinemaViewport) {
+      initEpilogueStage();
+      return;
+    }
 
     // Cross-dissolve: Hero fades into #09090b while #one-shot-stage enters smoothly
     const heroFadeTargets = [DOM.heroInner, DOM.heroSilhouetteWrap].filter(Boolean);
@@ -1411,9 +1596,9 @@
       gsap.set(bg, { opacity: i === 0 ? 1 : 0 });
     });
 
-    // Strict scale 1.0 framing anchored cleanly at 50% 10%
+    // Strict center-top anchor for headroom-safe 35mm optical push (1.00 -> 1.028)
     actBackdrops.forEach(backdrop => {
-      gsap.set(backdrop, { scale: 1.0 });
+      gsap.set(backdrop, { scale: 1.0, transformOrigin: 'center top' });
     });
 
     if (skyfallRain) gsap.set(skyfallRain, { opacity: 0 });
@@ -1432,11 +1617,11 @@
         anticipatePin: 1,
         onEnter: () => {
           inStageAudioZone = true;
-          if (ambientEnabled) crossfadeAmbientToAct(currentActIndex);
+          if (ambientEnabled && !inEpilogueZone) crossfadeAmbientToAct(currentActIndex);
         },
         onEnterBack: () => {
           inStageAudioZone = true;
-          if (ambientEnabled) crossfadeAmbientToAct(currentActIndex);
+          if (ambientEnabled && !inEpilogueZone) crossfadeAmbientToAct(currentActIndex);
         },
         onLeave: () => {
           inStageAudioZone = false;
@@ -1447,6 +1632,20 @@
         }
       }
     });
+
+    if (typeof ScrollTrigger.refresh === 'function') {
+      ScrollTrigger.refresh();
+    }
+
+    // Resolve actual initial audio zone & initialize epilogue strictly AFTER +420% pin inflation
+    updateAudioZoneFromScroll();
+    initEpilogueStage();
+
+    if (ambientEnabled && inStageAudioZone && !inEpilogueZone) {
+      crossfadeAmbientToAct(currentActIndex, INITIAL_AUDIO_FADE_MS);
+    } else if (!inStageAudioZone) {
+      fadeOutAmbientDecks(true);
+    }
 
     console.info('[007 ARCHIVE] Exclusive 5-Act State Machine & 100vh Stage active.');
   }
@@ -1513,7 +1712,9 @@
 
   function handleScrollProgress(progress) {
     const clampedProgress = Math.min(1, Math.max(0, progress));
+    lastStageProgress = clampedProgress;
     const newActIndex = Math.min(4, Math.max(0, Math.floor(clampedProgress * 5)));
+    const actLocalProgress = Math.min(1, Math.max(0, clampedProgress * 5 - newActIndex));
 
     if (DOM.rulerNodes && DOM.rulerNodes.length > 0) {
       DOM.rulerNodes.forEach((node, idx) => {
@@ -1527,12 +1728,40 @@
       });
     }
 
+    // Monochrome Vernier micro-tick precision breathing tied to sub-act scroll progress
+    if (DOM.vernierMinorTicks && DOM.vernierMinorTicks.length > 0) {
+      const needleNorm = Math.min(1, Math.max(0, (clampedProgress - 0.1) / 0.8));
+      DOM.vernierMinorTicks.forEach((tick) => {
+        const y1 = parseFloat(tick.getAttribute('y1') || '12');
+        const tickNorm = (y1 - 12) / 216;
+        const dist = Math.abs(tickNorm - needleNorm);
+        if (dist < 0.16) {
+          const glow = Math.cos((dist / 0.16) * (Math.PI / 2));
+          tick.setAttribute('stroke', `rgba(234, 230, 223, ${(0.22 + glow * 0.56).toFixed(3)})`);
+          tick.setAttribute('x1', (21 - glow * 4.5).toFixed(1));
+        } else {
+          tick.setAttribute('stroke', 'rgba(234, 230, 223, 0.22)');
+          tick.setAttribute('x1', '21');
+        }
+      });
+    }
+
     if (newActIndex !== currentActIndex) {
       currentActIndex = newActIndex;
       setActiveAct(currentActIndex);
 
       if (ambientEnabled && inStageAudioZone && !inEpilogueZone) {
         crossfadeAmbientToAct(currentActIndex);
+      }
+    }
+
+    // Subtle 35mm optical push (1.00 -> 1.028) anchored center top to guard headroom
+    if (!prefersReducedMotion && DOM.actBackdrops && DOM.actBackdrops[newActIndex]) {
+      const targetScale = 1 + actLocalProgress * 0.028;
+      if (typeof gsap !== 'undefined') {
+        gsap.set(DOM.actBackdrops[newActIndex], { scale: targetScale, transformOrigin: 'center top' });
+      } else {
+        DOM.actBackdrops[newActIndex].style.transform = `scale(${targetScale.toFixed(4)})`;
       }
     }
   }
@@ -1760,8 +1989,33 @@
         fadeOutAmbientDecks(false, EPILOGUE_AUDIO_FADE_MS);
       }
       startEpilogueCredits();
-    } else if (ambientEnabled && inStageAudioZone) {
-      crossfadeAmbientToAct(currentActIndex, INITIAL_AUDIO_FADE_MS);
+    } else {
+      if (DOM.epilogueHnTrigger && DOM.epilogueHnTrigger.style && typeof DOM.epilogueHnTrigger.style.setProperty === 'function') {
+        DOM.epilogueHnTrigger.style.setProperty('--trigger-proximity-opacity', '0.16');
+      }
+
+      // Reset cleanly if visitor exited early during the 1.9s blackout pause so premiere replays on re-entry
+      if (epilogueTimeline && !epilogueCreditsPlayed) {
+        const elapsedSec = typeof epilogueTimeline.time === 'function' ? epilogueTimeline.time() : 0;
+        if (elapsedSec < 1.9) {
+          epilogueTimeline.kill();
+          epilogueTimeline = null;
+          epilogueCreditsStarted = false;
+          if (DOM.epilogueStage) DOM.epilogueStage.classList.remove('is-credits-playing');
+          if (typeof gsap !== 'undefined') {
+            gsap.set([DOM.epilogueTribute, DOM.epilogueReturn, DOM.epilogueFinal].filter(Boolean), {
+              autoAlpha: 0,
+              filter: 'blur(0px)',
+              scale: 1,
+              y: 0
+            });
+          }
+        }
+      }
+
+      if (ambientEnabled && inStageAudioZone) {
+        crossfadeAmbientToAct(currentActIndex, INITIAL_AUDIO_FADE_MS);
+      }
     }
   }
 
@@ -1919,7 +2173,8 @@
   }
 
   function initEpilogueStage() {
-    if (!DOM.epilogueStage) return;
+    if (epilogueInitialized || !DOM.epilogueStage) return;
+    epilogueInitialized = true;
 
     if ('IntersectionObserver' in window) {
       if (epilogueObserver) epilogueObserver.disconnect();
@@ -1933,24 +2188,55 @@
         { threshold: [0, 0.55] }
       );
       epilogueObserver.observe(DOM.epilogueStage);
+    } else {
+      // Fallback strictly when IntersectionObserver is unavailable
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (isEpilogueMajorityVisible()) {
+            setEpilogueActiveState(true);
+          } else if (inEpilogueZone) {
+            setEpilogueActiveState(false);
+          }
+        },
+        { passive: true }
+      );
     }
-
-    // Fallback & high-speed scroll check for environments without active IntersectionObserver ticks
-    window.addEventListener(
-      'scroll',
-      () => {
-        if (isEpilogueMajorityVisible()) {
-          setEpilogueActiveState(true);
-        } else if (inEpilogueZone) {
-          setEpilogueActiveState(false);
-        }
-      },
-      { passive: true }
-    );
 
     if (isEpilogueMajorityVisible()) {
       setEpilogueActiveState(true);
     }
+
+    // 160px Proximity Magnetic Glow on Corner 007 Trigger (Strictly active once permanent end screen settles)
+    const setTriggerProximityOpacity = (val) => {
+      if (DOM.epilogueHnTrigger && DOM.epilogueHnTrigger.style && typeof DOM.epilogueHnTrigger.style.setProperty === 'function') {
+        DOM.epilogueHnTrigger.style.setProperty('--trigger-proximity-opacity', val);
+      }
+    };
+
+    DOM.epilogueStage.addEventListener('pointermove', (e) => {
+      if (prefersReducedMotion || !epilogueCreditsPlayed || isHnMorphOpen || !DOM.epilogueHnTrigger) return;
+      if (!DOM.epilogueHnTrigger.classList.contains('is-ready')) return;
+      if (typeof DOM.epilogueHnTrigger.getBoundingClientRect !== 'function') return;
+
+      const rect = DOM.epilogueHnTrigger.getBoundingClientRect();
+      if (!rect || rect.width <= 0) return;
+
+      const cx = rect.left + rect.width * 0.5;
+      const cy = rect.top + rect.height * 0.5;
+      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+
+      if (dist <= 160) {
+        const t = 1 - dist / 160;
+        setTriggerProximityOpacity((0.16 + t * (0.38 - 0.16)).toFixed(3));
+      } else {
+        setTriggerProximityOpacity('0.16');
+      }
+    });
+
+    DOM.epilogueStage.addEventListener('pointerleave', () => {
+      setTriggerProximityOpacity('0.16');
+    });
 
     DOM.epilogueStage.addEventListener('click', (e) => {
       if (isHnMorphOpen) {
@@ -2265,6 +2551,37 @@
   // ==========================================
   // 10. INITIALIZATION
   // ==========================================
+  function initMobileExhibitGate() {
+    if (!DOM.mobileGate) return;
+    let dismissed = false;
+    try {
+      dismissed = sessionStorage.getItem(STORAGE_KEY_MOBILE_GATE) === '1';
+    } catch (e) {
+      dismissed = false;
+    }
+
+    const isNarrowViewport = typeof window !== 'undefined' && window.innerWidth <= 959;
+    const isCoarsePointer = typeof window !== 'undefined' && window.matchMedia &&
+      window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+
+    if (!dismissed && (isNarrowViewport || isCoarsePointer)) {
+      DOM.mobileGate.classList.add('is-visible');
+      DOM.mobileGate.setAttribute('aria-hidden', 'false');
+    }
+
+    if (DOM.mobileGateDismiss) {
+      DOM.mobileGateDismiss.addEventListener('click', () => {
+        DOM.mobileGate.classList.remove('is-visible');
+        DOM.mobileGate.setAttribute('aria-hidden', 'true');
+        try {
+          sessionStorage.setItem(STORAGE_KEY_MOBILE_GATE, '1');
+        } catch (e) {
+          // sessionStorage optional
+        }
+      });
+    }
+  }
+
   function init() {
     try {
       const cachedLang = localStorage.getItem(STORAGE_KEY_LANG);
@@ -2308,19 +2625,26 @@
     renderArtifactsGrid(data.artifacts, currentLang);
     initDarkroomGallery();
     initScrollReveals();
-    initEpilogueStage();
+    initMobileExhibitGate();
 
+    // Pre-decode offline Base64 SFX during initial load so 1st click always hits native MP3
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(() => preloadGearSamples(), { timeout: 250 });
+    } else {
+      preloadGearSamples();
+    }
+
+    // Bind epilogue observer & finalize stage audio strictly after ScrollTrigger Pin inflates stage height
     if (document.readyState === 'complete') {
       initGunBarrelScrollytelling();
     } else {
+      updateAudioZoneFromScroll();
+      if (ambientEnabled && inStageAudioZone && !inEpilogueZone && !isEpilogueMajorityVisible()) {
+        crossfadeAmbientToAct(currentActIndex, INITIAL_AUDIO_FADE_MS);
+      }
       window.addEventListener('load', () => {
         initGunBarrelScrollytelling();
       });
-    }
-
-    // Attempt default 30% ambient fade-in right on Hero; fall back cleanly to standby unlock if blocked
-    if (ambientEnabled && inStageAudioZone && !inEpilogueZone) {
-      crossfadeAmbientToAct(0, INITIAL_AUDIO_FADE_MS);
     }
 
     console.info(`[007 ARCHIVE INITIALIZED] Daniel Craig Era // Language: ${currentLang.toUpperCase()}`);
