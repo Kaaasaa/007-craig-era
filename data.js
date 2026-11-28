@@ -160,8 +160,8 @@ const SITE_DATA = {
           primary: "#1e140e",
           accent: "#B59B6A"
         },
-        quote: "A license to kill is also a license not to kill.",
-        quoteZh: "“杀人执照，同样也是不杀的执照。”",
+        quote: "A gun gives you an illusion of personal power... you have a choice.",
+        quoteZh: "“枪支给人带来掌控的幻觉……但你有权选择不扣动扳机。”",
         arcCommentary: "直面暗黑罗网的宿命源头，首次在破晓桥头放下枪口抉择。"
       },
       {
@@ -200,7 +200,7 @@ const SITE_DATA = {
         aspectRatio: "16 / 9",
         interactionType: "headlights",
         hotspots: [
-          { id: "db5-guns", x: 15.2, y: 47.0, label: "M134 隐藏式双管机枪", align: "right" },
+          { id: "db5-guns", x: 15.2, y: 47.0, label: "双联装 M134 六管加特林机枪", align: "right" },
           { id: "db5-plate", x: 28.2, y: 66.8, label: "BMT 216A 三面翻转车牌", align: "right" },
           { id: "db5-engine", x: 32.0, y: 54.0, label: "4.0L 直列六缸 · 282 BHP", align: "right" }
         ]
@@ -401,8 +401,8 @@ const SITE_DATA = {
           primary: "#1e140e",
           accent: "#B59B6A"
         },
-        quote: "A license to kill is also a license not to kill.",
-        quoteZh: "A license to kill is also a license not to kill.",
+        quote: "A gun gives you an illusion of personal power... you have a choice.",
+        quoteZh: "A gun gives you an illusion of personal power... you have a choice.",
         arcCommentary: "Facing the architect of his pain, Bond chooses mercy over execution."
       },
       {
@@ -441,7 +441,7 @@ const SITE_DATA = {
         aspectRatio: "16 / 9",
         interactionType: "headlights",
         hotspots: [
-          { id: "db5-guns", x: 15.2, y: 47.0, label: "Concealed M134 Miniguns", align: "right" },
+          { id: "db5-guns", x: 15.2, y: 47.0, label: "Twin Concealed M134 Miniguns", align: "right" },
           { id: "db5-plate", x: 28.2, y: 66.8, label: "Revolving Plate · BMT 216A", align: "right" },
           { id: "db5-engine", x: 32.0, y: 54.0, label: "4.0L Straight-Six · 282 BHP", align: "right" }
         ]

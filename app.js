@@ -91,8 +91,11 @@
     'M 194 22 C 194 35 194 47 194 60 C 194 73 194 85 194 98',
     'M 194 22 C 210 47 226 73 242 98 C 242 73 242 47 242 22'
   ];
+  const EPILOGUE_ENV_THRESHOLD = 0.6;
   let epilogueInitialized = false;
   let epilogueObserver = null;
+  let epilogueBottomWatcherBound = false;
+  let epilogueScrollRafId = null;
   let epilogueCreditsStarted = false;
   let epilogueCreditsPlayed = false;
   let epilogueTimeline = null;
@@ -1784,14 +1787,30 @@
     });
   }
 
-  function isEpilogueMajorityVisible() {
+  function isEpilogueMajorityVisible(threshold = EPILOGUE_ENV_THRESHOLD) {
     if (!DOM.epilogueStage || typeof DOM.epilogueStage.getBoundingClientRect !== 'function') return false;
     const rect = DOM.epilogueStage.getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight || 0;
     if (vh <= 0 || rect.height <= 0) return false;
     const visibleHeight = Math.max(0, Math.min(rect.bottom, vh) - Math.max(rect.top, 0));
     const denominator = Math.min(rect.height, vh);
-    return denominator > 0 && (visibleHeight / denominator) >= 0.55;
+    return denominator > 0 && (visibleHeight / denominator) >= threshold;
+  }
+
+  function isAtPageBottom() {
+    if (!DOM.epilogueStage || typeof DOM.epilogueStage.getBoundingClientRect !== 'function') return false;
+    const epilogueRect = DOM.epilogueStage.getBoundingClientRect();
+    const docEl = document.documentElement;
+    const bodyEl = document.body;
+    const docHeight = Math.max(
+      docEl && typeof docEl.scrollHeight === 'number' ? docEl.scrollHeight : 0,
+      bodyEl && typeof bodyEl.scrollHeight === 'number' ? bodyEl.scrollHeight : 0
+    );
+    const vh = window.innerHeight || (docEl && docEl.clientHeight) || 0;
+    const sy = window.scrollY || window.pageYOffset || 0;
+    if (vh <= 0 || docHeight <= 0 || epilogueRect.height <= 0) return false;
+    const remaining = docHeight - (sy + vh);
+    return remaining <= 16 && epilogueRect.top <= 16;
   }
 
   function fastForwardEpilogueToEnd(immediate = false) {
@@ -1970,6 +1989,37 @@
     }
   }
 
+  function resetEpiloguePremiereIfInBlackout() {
+    if (!epilogueTimeline || epilogueCreditsPlayed) return;
+    const elapsedSec = typeof epilogueTimeline.time === 'function' ? epilogueTimeline.time() : 0;
+    if (elapsedSec < 1.9) {
+      epilogueTimeline.kill();
+      epilogueTimeline = null;
+      epilogueCreditsStarted = false;
+      if (DOM.epilogueStage) DOM.epilogueStage.classList.remove('is-credits-playing');
+      if (typeof gsap !== 'undefined') {
+        gsap.set([DOM.epilogueTribute, DOM.epilogueReturn, DOM.epilogueFinal].filter(Boolean), {
+          autoAlpha: 0,
+          filter: 'blur(0px)',
+          scale: 1,
+          y: 0
+        });
+      }
+    }
+  }
+
+  function evaluateEpilogueBottomState() {
+    if (isAtPageBottom()) {
+      if (!epilogueCreditsStarted && !epilogueCreditsPlayed) {
+        startEpilogueCredits();
+      }
+      return;
+    }
+
+    // Reset cleanly if visitor leaves page bottom during the 1.9s blackout pause so premiere replays cleanly
+    resetEpiloguePremiereIfInBlackout();
+  }
+
   function setEpilogueActiveState(active) {
     if (active === inEpilogueZone) return;
     inEpilogueZone = active;
@@ -1988,30 +2038,12 @@
       if (ambientEnabled && hasPlayingDecks) {
         fadeOutAmbientDecks(false, EPILOGUE_AUDIO_FADE_MS);
       }
-      startEpilogueCredits();
     } else {
       if (DOM.epilogueHnTrigger && DOM.epilogueHnTrigger.style && typeof DOM.epilogueHnTrigger.style.setProperty === 'function') {
         DOM.epilogueHnTrigger.style.setProperty('--trigger-proximity-opacity', '0.16');
       }
 
-      // Reset cleanly if visitor exited early during the 1.9s blackout pause so premiere replays on re-entry
-      if (epilogueTimeline && !epilogueCreditsPlayed) {
-        const elapsedSec = typeof epilogueTimeline.time === 'function' ? epilogueTimeline.time() : 0;
-        if (elapsedSec < 1.9) {
-          epilogueTimeline.kill();
-          epilogueTimeline = null;
-          epilogueCreditsStarted = false;
-          if (DOM.epilogueStage) DOM.epilogueStage.classList.remove('is-credits-playing');
-          if (typeof gsap !== 'undefined') {
-            gsap.set([DOM.epilogueTribute, DOM.epilogueReturn, DOM.epilogueFinal].filter(Boolean), {
-              autoAlpha: 0,
-              filter: 'blur(0px)',
-              scale: 1,
-              y: 0
-            });
-          }
-        }
-      }
+      resetEpiloguePremiereIfInBlackout();
 
       if (ambientEnabled && inStageAudioZone) {
         crossfadeAmbientToAct(currentActIndex, INITIAL_AUDIO_FADE_MS);
@@ -2172,6 +2204,31 @@
     }
   }
 
+  function onEpilogueZoneScroll() {
+    if (epilogueScrollRafId !== null) return;
+    const schedule = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : (cb) => { cb(); return null; };
+    epilogueScrollRafId = schedule(() => {
+      epilogueScrollRafId = null;
+      evaluateEpilogueBottomState();
+    });
+  }
+
+  function setEpilogueBottomWatcherActive(enabled) {
+    if (enabled === epilogueBottomWatcherBound) return;
+    epilogueBottomWatcherBound = enabled;
+    if (enabled) {
+      window.addEventListener('scroll', onEpilogueZoneScroll, { passive: true });
+    } else {
+      window.removeEventListener('scroll', onEpilogueZoneScroll);
+      if (epilogueScrollRafId !== null && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(epilogueScrollRafId);
+        epilogueScrollRafId = null;
+      }
+    }
+  }
+
   function initEpilogueStage() {
     if (epilogueInitialized || !DOM.epilogueStage) return;
     epilogueInitialized = true;
@@ -2181,15 +2238,21 @@
       epilogueObserver = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            const active = entry.intersectionRatio >= 0.55 || isEpilogueMajorityVisible();
-            setEpilogueActiveState(active);
+            const visible = entry.intersectionRatio > 0 || entry.isIntersecting;
+            const envActive = entry.intersectionRatio >= EPILOGUE_ENV_THRESHOLD || isEpilogueMajorityVisible();
+            setEpilogueBottomWatcherActive(visible);
+            setEpilogueActiveState(envActive);
+            if (visible || epilogueCreditsStarted) {
+              evaluateEpilogueBottomState();
+            }
           });
         },
-        { threshold: [0, 0.55] }
+        { threshold: [0, 0.01, EPILOGUE_ENV_THRESHOLD] }
       );
       epilogueObserver.observe(DOM.epilogueStage);
     } else {
       // Fallback strictly when IntersectionObserver is unavailable
+      setEpilogueBottomWatcherActive(true);
       window.addEventListener(
         'scroll',
         () => {
@@ -2203,9 +2266,21 @@
       );
     }
 
+    if (typeof ScrollTrigger !== 'undefined' && typeof ScrollTrigger.create === 'function') {
+      ScrollTrigger.create({
+        id: 'epilogueBottom',
+        trigger: DOM.epilogueStage,
+        start: 'bottom bottom-=16',
+        onEnter: evaluateEpilogueBottomState,
+        onEnterBack: evaluateEpilogueBottomState,
+        onLeaveBack: evaluateEpilogueBottomState
+      });
+    }
+
     if (isEpilogueMajorityVisible()) {
       setEpilogueActiveState(true);
     }
+    evaluateEpilogueBottomState();
 
     // 160px Proximity Magnetic Glow on Corner 007 Trigger (Strictly active once permanent end screen settles)
     const setTriggerProximityOpacity = (val) => {
