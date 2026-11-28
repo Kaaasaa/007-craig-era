@@ -160,8 +160,8 @@ const SITE_DATA = {
           primary: "#1e140e",
           accent: "#B59B6A"
         },
-        quote: "A gun gives you an illusion of personal power... you have a choice.",
-        quoteZh: "“枪支给人带来掌控的幻觉……但你有权选择不扣动扳机。”",
+        quote: "A license to kill is also a license not to kill.",
+        quoteZh: "“杀人执照，同样也是不杀的执照。”",
         arcCommentary: "直面暗黑罗网的宿命源头，首次在破晓桥头放下枪口抉择。"
       },
       {
@@ -401,8 +401,8 @@ const SITE_DATA = {
           primary: "#1e140e",
           accent: "#B59B6A"
         },
-        quote: "A gun gives you an illusion of personal power... you have a choice.",
-        quoteZh: "A gun gives you an illusion of personal power... you have a choice.",
+        quote: "A license to kill is also a license not to kill.",
+        quoteZh: "A license to kill is also a license not to kill.",
         arcCommentary: "Facing the architect of his pain, Bond chooses mercy over execution."
       },
       {
